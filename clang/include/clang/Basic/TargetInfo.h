@@ -58,6 +58,7 @@ struct TransferrableTargetInfo {
   unsigned char PointerWidth, PointerAlign;
   unsigned char BoolWidth, BoolAlign;
   unsigned char IntWidth, IntAlign;
+  unsigned char ShortWidth, ShortAlign;
   unsigned char HalfWidth, HalfAlign;
   unsigned char FloatWidth, FloatAlign;
   unsigned char DoubleWidth, DoubleAlign;
@@ -386,11 +387,11 @@ public:
 
   /// Return the size of 'signed short' and 'unsigned short' for this
   /// target, in bits.
-  unsigned getShortWidth() const { return 16; } // FIXME
+  unsigned getShortWidth() const { return ShortWidth; }
 
   /// Return the alignment of 'signed short' and 'unsigned short' for
   /// this target.
-  unsigned getShortAlign() const { return 16; } // FIXME
+  unsigned getShortAlign() const { return ShortAlign; }
 
   /// getIntWidth/Align - Return the size of 'signed int' and 'unsigned int' for
   /// this target, in bits.
