@@ -2221,7 +2221,7 @@ void InnerLoopVectorizer::vectorizeInterleaveGroup(Instruction *Instr,
     // Current pointer is pointed to A[i+2], adjust it to A[i].
 
     bool InBounds = false;
-    if (auto *gep = dyn_cast<GetElementPtrInst>(AddrPart->stripPointerCasts()))
+    if (auto *gep = dyn_cast<GetElementPtrInst>(AddrPart->stripPointerCastsSafe()))
       InBounds = gep->isInBounds();
     AddrPart = Builder.CreateGEP(ScalarTy, AddrPart, Builder.getInt32(-Index));
     cast<GetElementPtrInst>(AddrPart)->setIsInBounds(InBounds);
@@ -2403,7 +2403,7 @@ void InnerLoopVectorizer::vectorizeMemoryInstruction(Instruction *Instr,
     GetElementPtrInst *PartPtr = nullptr;
 
     bool InBounds = false;
-    if (auto *gep = dyn_cast<GetElementPtrInst>(Ptr->stripPointerCasts()))
+    if (auto *gep = dyn_cast<GetElementPtrInst>(Ptr->stripPointerCastsSafe()))
       InBounds = gep->isInBounds();
 
     if (Reverse) {

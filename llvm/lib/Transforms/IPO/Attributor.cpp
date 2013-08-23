@@ -424,7 +424,7 @@ static bool genericValueTraversal(
     // not have a pointer as stripPointerCasts only works on them.
     Value *NewV = nullptr;
     if (V->getType()->isPointerTy()) {
-      NewV = V->stripPointerCasts();
+      NewV = V->stripPointerCastsSafe();
     } else {
       CallSite CS(V);
       if (CS && CS.getCalledFunction()) {

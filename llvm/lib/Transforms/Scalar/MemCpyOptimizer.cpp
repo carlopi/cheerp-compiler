@@ -618,7 +618,7 @@ bool MemCpyOptPass::processStore(StoreInst *SI, BasicBlock::iterator &BBI) {
       if (C) {
         // Check that nothing touches the dest of the "copy" between
         // the call and the store.
-        Value *CpyDest = SI->getPointerOperand()->stripPointerCasts();
+        Value *CpyDest = SI->getPointerOperand()->stripPointerCastsSafe();
         bool CpyDestIsLocal = isa<AllocaInst>(CpyDest);
         AliasAnalysis &AA = LookupAliasAnalysis();
         MemoryLocation StoreLoc = MemoryLocation::get(SI);
@@ -639,8 +639,8 @@ bool MemCpyOptPass::processStore(StoreInst *SI, BasicBlock::iterator &BBI) {
 
       if (C) {
         bool changed = performCallSlotOptzn(
-            LI, SI->getPointerOperand()->stripPointerCasts(),
-            LI->getPointerOperand()->stripPointerCasts(),
+            LI, SI->getPointerOperand()->stripPointerCasts(DL.isByteAddressable()),
+            LI->getPointerOperand()->stripPointerCasts(DL.isByteAddressable()),
             DL.getTypeStoreSize(SI->getOperand(0)->getType()),
             findCommonAlignment(DL, SI, LI).value(), C);
         if (changed) {
@@ -865,7 +865,7 @@ bool MemCpyOptPass::performCallSlotOptzn(Instruction *cpy, Value *cpyDest,
       cpyDest->getType()->getPointerAddressSpace())
     return false;
   for (unsigned i = 0; i < CS.arg_size(); ++i)
-    if (CS.getArgument(i)->stripPointerCasts() == cpySrc &&
+    if (CS.getArgument(i)->stripPointerCastsSafe() == cpySrc &&
         cpySrc->getType()->getPointerAddressSpace() !=
         CS.getArgument(i)->getType()->getPointerAddressSpace())
       return false;
@@ -873,7 +873,7 @@ bool MemCpyOptPass::performCallSlotOptzn(Instruction *cpy, Value *cpyDest,
   // All the checks have passed, so do the transformation.
   bool changedArgument = false;
   for (unsigned i = 0; i < CS.arg_size(); ++i)
-    if (CS.getArgument(i)->stripPointerCasts() == cpySrc) {
+    if (CS.getArgument(i)->stripPointerCasts(DL.isByteAddressable()) == cpySrc) {
       Value *Dest = cpySrc->getType() == cpyDest->getType() ?  cpyDest
         : CastInst::CreatePointerCast(cpyDest, cpySrc->getType(),
                                       cpyDest->getName(), C);
@@ -1264,7 +1264,7 @@ bool MemCpyOptPass::processByValArgument(CallSite CS, unsigned ArgNo) {
   // result.
   MemCpyInst *MDep = dyn_cast<MemCpyInst>(DepInfo.getInst());
   if (!MDep || MDep->isVolatile() ||
-      ByValArg->stripPointerCasts() != MDep->getDest())
+      ByValArg->stripPointerCasts(DL.isByteAddressable()) != MDep->getDest())
     return false;
 
   // The length of the memcpy must be larger or equal to the size of the byval.

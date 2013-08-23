@@ -320,7 +320,7 @@ static void computeFunctionSummary(ModuleSummaryIndex &Index, const Module &M,
       auto *CalledValue = CS.getCalledValue();
       auto *CalledFunction = CS.getCalledFunction();
       if (CalledValue && !CalledFunction) {
-        CalledValue = CalledValue->stripPointerCasts();
+        CalledValue = CalledValue->stripPointerCastsSafe();
         // Stripping pointer casts can reveal a called function.
         CalledFunction = dyn_cast<Function>(CalledValue);
       }
@@ -490,7 +490,7 @@ static void findFuncPointers(const Constant *I, uint64_t StartingOffset,
                              VTableFuncList &VTableFuncs) {
   // First check if this is a function pointer.
   if (I->getType()->isPointerTy()) {
-    auto Fn = dyn_cast<Function>(I->stripPointerCasts());
+    auto Fn = dyn_cast<Function>(I->stripPointerCastsSafe());
     // We can disregard __cxa_pure_virtual as a possible call target, as
     // calls to pure virtuals are UB.
     if (Fn && Fn->getName() != "__cxa_pure_virtual")

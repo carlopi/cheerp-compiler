@@ -676,7 +676,7 @@ void Verifier::visitGlobalVariable(const GlobalVariable &GV) {
         Assert(InitArray, "wrong initalizer for intrinsic global variable",
                Init);
         for (Value *Op : InitArray->operands()) {
-          Value *V = Op->stripPointerCasts();
+          Value *V = Op->stripPointerCastsSafe();
           Assert(isa<GlobalVariable>(V) || isa<Function>(V) ||
                      isa<GlobalAlias>(V),
                  "invalid llvm.used member", V);
@@ -2271,7 +2271,7 @@ void Verifier::visitFunction(const Function &F) {
 
   // Check validity of the personality function
   if (F.hasPersonalityFn()) {
-    auto *Per = dyn_cast<Function>(F.getPersonalityFn()->stripPointerCasts());
+    auto *Per = dyn_cast<Function>(F.getPersonalityFn()->stripPointerCastsSafe());
     if (Per)
       Assert(Per->getParent() == F.getParent(),
              "Referencing personality function in another module!",
@@ -2888,7 +2888,7 @@ void Verifier::visitCallBase(CallBase &Call) {
                      Call.getCalledFunction()->getName().startswith("llvm.");
 
   Function *Callee
-    = dyn_cast<Function>(Call.getCalledValue()->stripPointerCasts());
+    = dyn_cast<Function>(Call.getCalledValue()->stripPointerCastsSafe());
 
   if (Attrs.hasAttribute(AttributeList::FunctionIndex, Attribute::Speculatable)) {
     // Don't allow speculatable on call sites, unless the underlying function
@@ -4321,7 +4321,7 @@ void Verifier::visitIntrinsicCall(Intrinsic::ID ID, CallBase &Call) {
   default:
     break;
   case Intrinsic::coro_id: {
-    auto *InfoArg = Call.getArgOperand(3)->stripPointerCasts();
+    auto *InfoArg = Call.getArgOperand(3)->stripPointerCastsSafe();
     if (isa<ConstantPointerNull>(InfoArg))
       break;
     auto *GV = dyn_cast<GlobalVariable>(InfoArg);
@@ -4412,7 +4412,7 @@ void Verifier::visitIntrinsicCall(Intrinsic::ID ID, CallBase &Call) {
   case Intrinsic::gcread:
     if (ID == Intrinsic::gcroot) {
       AllocaInst *AI =
-          dyn_cast<AllocaInst>(Call.getArgOperand(0)->stripPointerCasts());
+          dyn_cast<AllocaInst>(Call.getArgOperand(0)->stripPointerCastsSafe());
       Assert(AI, "llvm.gcroot parameter #1 must be an alloca.", Call);
       Assert(isa<Constant>(Call.getArgOperand(1)),
              "llvm.gcroot parameter #2 must be a constant.", Call);
@@ -4428,7 +4428,7 @@ void Verifier::visitIntrinsicCall(Intrinsic::ID ID, CallBase &Call) {
            "Enclosing function does not use GC.", Call);
     break;
   case Intrinsic::init_trampoline:
-    Assert(isa<Function>(Call.getArgOperand(1)->stripPointerCasts()),
+    Assert(isa<Function>(Call.getArgOperand(1)->stripPointerCastsSafe()),
            "llvm.init_trampoline parameter #2 must resolve to a function.",
            Call);
     break;
@@ -4438,7 +4438,7 @@ void Verifier::visitIntrinsicCall(Intrinsic::ID ID, CallBase &Call) {
            "invalid arguments to llvm.prefetch", Call);
     break;
   case Intrinsic::stackprotector:
-    Assert(isa<AllocaInst>(Call.getArgOperand(1)->stripPointerCasts()),
+    Assert(isa<AllocaInst>(Call.getArgOperand(1)->stripPointerCastsSafe()),
            "llvm.stackprotector parameter #2 must resolve to an alloca.", Call);
     break;
   case Intrinsic::localescape: {
@@ -4450,7 +4450,7 @@ void Verifier::visitIntrinsicCall(Intrinsic::ID ID, CallBase &Call) {
     for (Value *Arg : Call.args()) {
       if (isa<ConstantPointerNull>(Arg))
         continue; // Null values are allowed as placeholders.
-      auto *AI = dyn_cast<AllocaInst>(Arg->stripPointerCasts());
+      auto *AI = dyn_cast<AllocaInst>(Arg->stripPointerCastsSafe());
       Assert(AI && AI->isStaticAlloca(),
              "llvm.localescape only accepts static allocas", Call);
     }
@@ -4459,7 +4459,7 @@ void Verifier::visitIntrinsicCall(Intrinsic::ID ID, CallBase &Call) {
     break;
   }
   case Intrinsic::localrecover: {
-    Value *FnArg = Call.getArgOperand(0)->stripPointerCasts();
+    Value *FnArg = Call.getArgOperand(0)->stripPointerCastsSafe();
     Function *Fn = dyn_cast<Function>(FnArg);
     Assert(Fn && !Fn->isDeclaration(),
            "llvm.localrecover first "
