@@ -178,6 +178,7 @@ public:
     FloatAlign = 8;
     DoubleAlign = 8;
     LongDoubleAlign = 8;
+    LongLongWidth = 32;
     SizeType = UnsignedInt;
   }
 
