@@ -392,6 +392,8 @@ std::string Attribute::getAsString(bool InAttrGrp) const {
     return "cold";
   if (hasAttribute(Attribute::ImmArg))
     return "immarg";
+  if (hasAttribute(Attribute::IsCast))
+    return "iscast";
 
   if (hasAttribute(Attribute::ByVal)) {
     std::string Result;
