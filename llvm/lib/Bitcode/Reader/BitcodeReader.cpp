@@ -1543,6 +1543,8 @@ static Attribute::AttrKind getAttrFromCode(uint64_t Code) {
     return Attribute::ImmArg;
   case bitc::ATTR_KIND_SANITIZE_MEMTAG:
     return Attribute::SanitizeMemTag;
+  case bitc::ATTR_KIND_ISCAST:
+    return Attribute::IsCast;
   }
 }
 
