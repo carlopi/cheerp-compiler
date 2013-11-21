@@ -3493,11 +3493,21 @@ void Driver::BuildActions(Compilation &C, DerivedArgList &Args,
 
   // Add a link action if necessary.
   if (!LinkerInputs.empty()) {
+    // Duetto: We need an additional step for to generated JS
+    if (TC.getArch() == llvm::Triple::duetto)
+    {
+      Action* linkJob = C.MakeAction<LinkJobAction>(LinkerInputs, types::TY_LLVM_BC);
+      ActionList duettoCompilerList;
+      duettoCompilerList.push_back(linkJob);
+      Actions.push_back(C.MakeAction<DuettoCompileJobAction>(duettoCompilerList, types::TY_Image));
+    }
+    else {
     if (Action *Wrapper = OffloadBuilder.makeHostLinkAction())
       LinkerInputs.push_back(Wrapper);
     Action *LA = C.MakeAction<LinkJobAction>(LinkerInputs, types::TY_Image);
     LA = OffloadBuilder.processHostLinkAction(LA);
     Actions.push_back(LA);
+    }
   }
 
   // Add an interface stubs merge action if necessary.
