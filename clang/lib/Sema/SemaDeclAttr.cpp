@@ -6659,6 +6659,11 @@ static void handleCFGuardAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
   D->addAttr(::new (S.Context) CFGuardAttr(S.Context, AL, Arg));
 }
 
+static void handleNoInit(Sema &S, Decl* D, const AttributeList &Attr)
+{
+  D->addAttr(::new (S.Context) NoInitAttr(Attr.getRange(), S.Context, Attr.getAttributeSpellingListIndex()));
+}
+
 //===----------------------------------------------------------------------===//
 // Top Level Sema Entry Points
 //===----------------------------------------------------------------------===//
@@ -7402,13 +7407,6 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case ParsedAttr::AT_RenderScriptKernel:
     handleSimpleAttribute<RenderScriptKernelAttr>(S, D, AL);
 
-  // Duetto attributes
-  case AttributeList::AT_Client:
-    handleClient(S, D, AL);
-    break;
-  case AttributeList::AT_Server:
-    handleServer(S, D, AL);
-    break;
   // XRay attributes.
   case ParsedAttr::AT_XRayInstrument:
     handleSimpleAttribute<XRayInstrumentAttr>(S, D, AL);
@@ -7424,6 +7422,10 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   // Move semantics attribute.
   case ParsedAttr::AT_Reinitializes:
     handleSimpleAttribute<ReinitializesAttr>(S, D, AL);
+
+  // Cheerp attributes
+  case AttributeList::AT_NoInit:
+    handleNoInit(S, D, Attr);
     break;
 
   case ParsedAttr::AT_AlwaysDestroy:
