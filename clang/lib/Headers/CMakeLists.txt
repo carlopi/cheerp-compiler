@@ -50,6 +50,7 @@ set(files
   cpuid.h
   clflushoptintrin.h
   clwbintrin.h
+  duettointrin.h
   emmintrin.h
   enqcmdintrin.h
   f16cintrin.h
