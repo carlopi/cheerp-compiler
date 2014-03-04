@@ -4383,6 +4383,7 @@ Instruction *InstCombiner::foldICmpWithCastOp(ICmpInst &ICmp) {
     return DL.getPointerTypeSizeInBits(SrcTy) == DestTy->getIntegerBitWidth();
   };
   if (CastOp0->getOpcode() == Instruction::PtrToInt &&
+      DL.isByteAddressable() &&
       CompatibleSizes(SrcTy, DestTy)) {
     Value *NewOp1 = nullptr;
     if (auto *PtrToIntOp1 = dyn_cast<PtrToIntOperator>(ICmp.getOperand(1))) {
