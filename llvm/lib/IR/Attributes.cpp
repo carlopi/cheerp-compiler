@@ -392,6 +392,8 @@ std::string Attribute::getAsString(bool InAttrGrp) const {
     return "cold";
   if (hasAttribute(Attribute::ImmArg))
     return "immarg";
+  if (hasAttribute(Attribute::Static))
+    return "static";
   if (hasAttribute(Attribute::TypedIntrinsic))
     return "typed_intrinsic";
 

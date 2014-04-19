@@ -236,6 +236,7 @@ enum Kind {
   kw_writeonly,
   kw_zeroext,
   kw_immarg,
+  kw_static,
 
   kw_type,
   kw_opaque,
