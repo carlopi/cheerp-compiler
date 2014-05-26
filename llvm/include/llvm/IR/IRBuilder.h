@@ -452,15 +452,16 @@ public:
   CallInst *CreateMemSet(Value *Ptr, Value *Val, uint64_t Size,
                          MaybeAlign Align, bool isVolatile = false,
                          MDNode *TBAATag = nullptr, MDNode *ScopeTag = nullptr,
-                         MDNode *NoAliasTag = nullptr) {
+                         MDNode *NoAliasTag = nullptr, bool byteLayout = true) {
     return CreateMemSet(Ptr, Val, getInt64(Size), Align, isVolatile,
-                        TBAATag, ScopeTag, NoAliasTag);
+                        TBAATag, ScopeTag, NoAliasTag, byteLayout);
   }
 
   CallInst *CreateMemSet(Value *Ptr, Value *Val, Value *Size, MaybeAlign Align,
                          bool isVolatile = false, MDNode *TBAATag = nullptr,
                          MDNode *ScopeTag = nullptr,
-                         MDNode *NoAliasTag = nullptr);
+                         MDNode *NoAliasTag = nullptr,
+                         bool byteLayout = true);
 
   /// Create and insert an element unordered-atomic memset of the region of
   /// memory starting at the given pointer to the given value.
@@ -525,11 +526,11 @@ public:
                              bool isVolatile = false, MDNode *TBAATag = nullptr,
                              MDNode *TBAAStructTag = nullptr,
                              MDNode *ScopeTag = nullptr,
-                             MDNode *NoAliasTag = nullptr),
+                             MDNode *NoAliasTag = nullptr, bool byteLayout = true),
       "Use the version that takes MaybeAlign instead") {
     return CreateMemCpy(Dst, MaybeAlign(DstAlign), Src, MaybeAlign(SrcAlign),
                         getInt64(Size), isVolatile, TBAATag, TBAAStructTag,
-                        ScopeTag, NoAliasTag);
+                        ScopeTag, NoAliasTag, byteLayout);
   }
 
   CallInst *CreateMemCpy(Value *Dst, MaybeAlign DstAlign, Value *Src,
@@ -537,10 +538,10 @@ public:
                          bool isVolatile = false, MDNode *TBAATag = nullptr,
                          MDNode *TBAAStructTag = nullptr,
                          MDNode *ScopeTag = nullptr,
-                         MDNode *NoAliasTag = nullptr) {
+                         MDNode *NoAliasTag = nullptr, bool byteLayout = true) {
     return CreateMemCpy(Dst, DstAlign, Src, SrcAlign, getInt64(Size),
                         isVolatile, TBAATag, TBAAStructTag, ScopeTag,
-                        NoAliasTag);
+                        NoAliasTag, byteLayout);
   }
 
   /// FIXME: Remove this function once transition to Align is over.
@@ -551,14 +552,14 @@ public:
                              bool isVolatile = false, MDNode *TBAATag = nullptr,
                              MDNode *TBAAStructTag = nullptr,
                              MDNode *ScopeTag = nullptr,
-                             MDNode *NoAliasTag = nullptr),
+                             MDNode *NoAliasTag = nullptr, bool byteLayout = true),
       "Use the version that takes MaybeAlign instead");
   CallInst *CreateMemCpy(Value *Dst, MaybeAlign DstAlign, Value *Src,
                          MaybeAlign SrcAlign, Value *Size,
                          bool isVolatile = false, MDNode *TBAATag = nullptr,
                          MDNode *TBAAStructTag = nullptr,
                          MDNode *ScopeTag = nullptr,
-                         MDNode *NoAliasTag = nullptr);
+                         MDNode *NoAliasTag = nullptr, bool byteLayout = true);
 
   /// Create and insert an element unordered-atomic memcpy between the
   /// specified pointers.
@@ -616,11 +617,11 @@ public:
       CallInst *CreateMemMove(
           Value *Dst, unsigned DstAlign, Value *Src, unsigned SrcAlign,
           uint64_t Size, bool isVolatile = false, MDNode *TBAATag = nullptr,
-          MDNode *ScopeTag = nullptr, MDNode *NoAliasTag = nullptr),
+          MDNode *ScopeTag = nullptr, MDNode *NoAliasTag = nullptr, bool byteLayout = true),
       "Use the version that takes MaybeAlign") {
     return CreateMemMove(Dst, MaybeAlign(DstAlign), Src, MaybeAlign(SrcAlign),
                          getInt64(Size), isVolatile, TBAATag, ScopeTag,
-                         NoAliasTag);
+                         NoAliasTag, byteLayout);
   }
   CallInst *CreateMemMove(Value *Dst, MaybeAlign DstAlign, Value *Src,
                           MaybeAlign SrcAlign, uint64_t Size,
@@ -636,16 +637,16 @@ public:
       CallInst *CreateMemMove(
           Value *Dst, unsigned DstAlign, Value *Src, unsigned SrcAlign,
           Value *Size, bool isVolatile = false, MDNode *TBAATag = nullptr,
-          MDNode *ScopeTag = nullptr, MDNode *NoAliasTag = nullptr),
+          MDNode *ScopeTag = nullptr, MDNode *NoAliasTag = nullptr, bool byteLayout = true),
       "Use the version that takes MaybeAlign") {
     return CreateMemMove(Dst, MaybeAlign(DstAlign), Src, MaybeAlign(SrcAlign),
-                         Size, isVolatile, TBAATag, ScopeTag, NoAliasTag);
+                         Size, isVolatile, TBAATag, ScopeTag, NoAliasTag, byteLayout);
   }
   CallInst *CreateMemMove(Value *Dst, MaybeAlign DstAlign, Value *Src,
                           MaybeAlign SrcAlign, Value *Size,
                           bool isVolatile = false, MDNode *TBAATag = nullptr,
                           MDNode *ScopeTag = nullptr,
-                          MDNode *NoAliasTag = nullptr);
+                          MDNode *NoAliasTag = nullptr, bool byteLayout = true);
 
   /// \brief Create and insert an element unordered-atomic memmove between the
   /// specified pointers.
