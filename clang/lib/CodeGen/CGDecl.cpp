@@ -1143,7 +1143,7 @@ static Address createUnnamedGlobalForMemcpyFrom(CodeGenModule &CGM,
                                                    SrcPtr.getAddressSpace());
   if (constant->getType()->isArrayTy())
     SrcPtr = Builder.CreateConstGEP2_32(GV->getType()->getPointerElementType(), SrcPtr, 0, 0);
-  if (SrcPtr.getType() != BP)
+  if (CGM.getTarget().isByteAddressable() && SrcPtr.getType() != BP)
     SrcPtr = Builder.CreateBitCast(SrcPtr, BP);
   return SrcPtr;
 }
@@ -1170,7 +1170,7 @@ static void emitStoresForConstant(CodeGenModule &CGM, const VarDecl &D,
   // then do a few stores afterward.
   if (shouldUseBZeroPlusStoresToInitialize(constant, ConstantSize)) {
     Builder.CreateMemSet(Loc, llvm::ConstantInt::get(CGM.Int8Ty, 0), SizeVal,
-                         isVolatile);
+                         isVolatile, CGM.getTarget().isByteAddressable());
 
     bool valueAlreadyCorrect =
         constant->isNullValue() || isa<llvm::UndefValue>(constant);
@@ -1192,7 +1192,7 @@ static void emitStoresForConstant(CodeGenModule &CGM, const VarDecl &D,
       Value = AP.getLimitedValue();
     }
     Builder.CreateMemSet(Loc, llvm::ConstantInt::get(CGM.Int8Ty, Value), SizeVal,
-                         isVolatile);
+                         isVolatile, CGM.getTarget().isByteAddressable());
     return;
   }
 
@@ -1227,7 +1227,7 @@ static void emitStoresForConstant(CodeGenModule &CGM, const VarDecl &D,
   Builder.CreateMemCpy(Loc,
                        createUnnamedGlobalForMemcpyFrom(
                            CGM, D, Builder, constant, Loc.getAlignment()),
-                       SizeVal, isVolatile);
+                       SizeVal, isVolatile, CGM.getTarget().isByteAddressable());
 }
 
 static void emitStoresForZeroInit(CodeGenModule &CGM, const VarDecl &D,
@@ -1857,11 +1857,13 @@ void CodeGenFunction::EmitAutoVarInit(const AutoVarEmission &emission) {
   }
 
   if (D.getType()->isArrayType())
+  {
     Loc = Builder.CreateConstGEP2_32(Loc->getType()->getPointerElementType(), Loc, 0, 0);
+  }
 
   llvm::Type *BP = CGM.Int8Ty->getPointerTo(Loc.getAddressSpace());
   emitStoresForConstant(
-      CGM, D, (Loc.getType() == BP) ? Loc : Builder.CreateBitCast(Loc, BP),
+      CGM, D, (getTarget().isByteAddressable() && Loc.getType() != BP) ? Builder.CreateBitCast(Loc, BP) : Loc,
       type.isVolatileQualified(), Builder, constant);
 }
 
