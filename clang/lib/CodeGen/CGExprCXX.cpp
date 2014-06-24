@@ -684,6 +684,9 @@ static CharUnits CalculateCookiePadding(CodeGenFunction &CGF,
   if (E->getOperatorNew()->isReservedGlobalPlacementOperator())
     return CharUnits::Zero();
 
+  if (!CGF.getTarget().isByteAddressable())
+    return CharUnits::Zero();
+
   return CGF.CGM.getCXXABI().GetArrayCookieSize(E);
 }
 
