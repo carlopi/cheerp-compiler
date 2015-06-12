@@ -2079,7 +2079,7 @@ Sema::BuildCXXNew(SourceRange Range, bool UseGlobal,
     if (!AllPlaceArgs.empty())
       PlacementArgs = AllPlaceArgs;
 
-    // Mark the placement new cast as duetto safe if possible
+    // Mark the placement new cast as cheerp safe if possible
     if(!PlacementArgs.empty() && OperatorNew->isReservedGlobalPlacementOperator())
     {
       CastExpr* castExpr = dyn_cast<CastExpr>(PlacementArgs[0]);
@@ -2087,7 +2087,7 @@ Sema::BuildCXXNew(SourceRange Range, bool UseGlobal,
           castExpr->getSubExpr()->getType()->isPointerType() &&
           castExpr->getSubExpr()->getType()->getPointeeType().getCanonicalType()==AllocType.getCanonicalType())
       {
-        castExpr->setDuettoSafe(true);
+        castExpr->setCheerpSafe(true);
       }
     }
 
