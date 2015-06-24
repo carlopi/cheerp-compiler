@@ -862,8 +862,6 @@ ASTContext::getCanonicalTemplateTemplateParmDecl(
 }
 
 CXXABI *ASTContext::createCXXABI(const TargetInfo &T) {
-  if (!LangOpts.CPlusPlus && T.isByteAddressable()) return nullptr;
-
   switch (T.getCXXABI().getKind()) {
   case TargetCXXABI::Fuchsia:
   case TargetCXXABI::GenericARM: // Same as Itanium at this level
