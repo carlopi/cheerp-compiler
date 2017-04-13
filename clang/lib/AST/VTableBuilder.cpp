@@ -1688,8 +1688,9 @@ void ItaniumVTableBuilder::LayoutPrimaryAndSecondaryVTables(
   if (Base.getBase() == MostDerivedClass)
     VBaseOffsetOffsets = Builder.getVBaseOffsetOffsets();
 
+  bool asmjs = Base.getBase()->hasAttr<AsmJSAttr>();
   // Add the offset to top.
-  if(Context.getTargetInfo().isByteAddressable()) {
+  if(Context.getTargetInfo().isByteAddressable() || asmjs) {
     CharUnits OffsetToTop = MostDerivedClassOffset - OffsetInLayoutClass;
     Components.push_back(VTableComponent::MakeOffsetToTop(OffsetToTop));
   }
@@ -1701,7 +1702,9 @@ void ItaniumVTableBuilder::LayoutPrimaryAndSecondaryVTables(
 
   // On Cheerp we want to start vtable pointer to start from 0 when possible
   if(!Context.getTargetInfo().isByteAddressable())
-    AddressPoint -= 1;
+  {
+    AddressPoint = asmjs ? AddressPoint-2 : AddressPoint-1;
+  }
 
   // Now go through all virtual member functions and add them.
   PrimaryBasesSetVectorTy PrimaryBases;
