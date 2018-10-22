@@ -9822,7 +9822,7 @@ Value *CodeGenFunction::EmitCheerpBuiltinExpr(unsigned BuiltinID,
     const Stmt* parent=PM.getParent(E);
     // We need an explicit cast after the call, void* can't be used
     llvm::Type *Tys[] = { VoidPtrTy };
-    const CastExpr* retCE=dyn_cast<CastExpr>(parent);
+    const CastExpr* retCE=dyn_cast_or_null<CastExpr>(parent);
     if (!retCE || retCE->getType()->isVoidPointerType())
     {
         if (asmjs) return 0;
@@ -9843,7 +9843,7 @@ Value *CodeGenFunction::EmitCheerpBuiltinExpr(unsigned BuiltinID,
     const Stmt* parent=PM.getParent(E);
     // We need an explicit cast after the call, void* can't be used
     llvm::Type *Tys[] = { VoidPtrTy };
-    const CastExpr* retCE=dyn_cast<CastExpr>(parent);
+    const CastExpr* retCE=dyn_cast_or_null<CastExpr>(parent);
     if (!retCE || retCE->getType()->isVoidPointerType())
     {
         if (asmjs) return 0;
@@ -9883,7 +9883,7 @@ Value *CodeGenFunction::EmitCheerpBuiltinExpr(unsigned BuiltinID,
     ParentMap PM(FD->getBody());
     const Stmt* parent=PM.getParent(E);
     // We need an explicit cast after the call, void* can't be used
-    const CastExpr* retCE=dyn_cast<CastExpr>(parent);
+    const CastExpr* retCE=dyn_cast_or_null<CastExpr>(parent);
     if (!retCE || retCE->getType()->isVoidPointerType())
     {
         if (asmjs) return 0;
