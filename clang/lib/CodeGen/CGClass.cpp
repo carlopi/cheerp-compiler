@@ -556,7 +556,7 @@ CodeGenFunction::GenerateDowncast(llvm::Value* Value,
   llvm::Function* intrinsic = llvm::Intrinsic::getDeclaration(&CGM.getModule(),
                               llvm::Intrinsic::cheerp_downcast, types);
 
-  return Builder.CreateCall2(intrinsic, Value, BaseIdOffset);
+  return Builder.CreateCall(intrinsic, {Value, BaseIdOffset});
 }
 
 llvm::Value *
@@ -569,7 +569,7 @@ CodeGenFunction::GenerateVirtualcast(llvm::Value* Value,
   llvm::Function* intrinsic = llvm::Intrinsic::getDeclaration(&CGM.getModule(),
                               llvm::Intrinsic::cheerp_virtualcast, types);
 
-  return Builder.CreateCall2(intrinsic, Value, VirtualOffset);
+  return Builder.CreateCall(intrinsic, {Value, VirtualOffset});
 }
 
 llvm::Value *
