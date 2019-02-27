@@ -445,6 +445,7 @@ void initializeFreeAndDeleteRemovalPass(PassRegistry&);
 void initializeGEPOptimizerPass(PassRegistry&);
 void initializeAllocaStoresExtractorPass(PassRegistry&);
 void initializeFixIrreducibleControlFlowPass(PassRegistry&);
+void initializeCheerpLowerSwitchPass(PassRegistry&);
 
 } // end namespace llvm
 
