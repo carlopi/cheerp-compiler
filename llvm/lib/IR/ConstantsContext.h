@@ -499,7 +499,7 @@ struct ConstantExprKeyType {
   bool operator==(const ConstantExprKeyType &X) const {
     return Opcode == X.Opcode && SubclassData == X.SubclassData &&
            SubclassOptionalData == X.SubclassOptionalData && Ops == X.Ops &&
-           Indexes == X.Indexes && (!ExplicitTy || !X.ExplicitTy || ExplicitTy == X.ExplicitTy);
+           Indexes == X.Indexes && ExplicitTy == X.ExplicitTy;
   }
 
   bool operator==(const ConstantExpr *CE) const {
