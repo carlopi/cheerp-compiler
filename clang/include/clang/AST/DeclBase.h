@@ -1869,6 +1869,8 @@ public:
 
   bool isStdNamespace() const;
 
+  bool isClientNamespace() const;
+
   bool isInlineNamespace() const;
 
   /// Determines whether this context is dependent on a
