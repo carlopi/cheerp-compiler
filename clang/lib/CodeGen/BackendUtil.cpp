@@ -578,6 +578,11 @@ void EmitAssemblyHelper::CreatePasses(legacy::PassManager &MPM,
   // TLI with an unknown target otherwise.
   Triple TargetTriple(TheModule->getTargetTriple());
 
+  std::unique_ptr<TargetLibraryInfoImpl> TLII(
+      createTLII(TargetTriple, CodeGenOpts));
+
+  PassManagerBuilderWrapper PMBuilder(TargetTriple, CodeGenOpts, LangOpts);
+
   if (TargetTriple.getArch() == llvm::Triple::cheerp)
   {
     PMBuilder.addExtension(PassManagerBuilder::EP_EarlyAsPossible,
@@ -590,9 +595,6 @@ void EmitAssemblyHelper::CreatePasses(legacy::PassManager &MPM,
                            addModuleCheerpPasses);
   }
 
-  std::unique_ptr<TargetLibraryInfoImpl> TLII(
-      createTLII(TargetTriple, CodeGenOpts));
-
   // If we reached here with a non-empty index file name, then the index file
   // was empty and we are not performing ThinLTO backend compilation (used in
   // testing in a distributed build environment). Drop any the type test
@@ -602,8 +604,6 @@ void EmitAssemblyHelper::CreatePasses(legacy::PassManager &MPM,
     MPM.add(createLowerTypeTestsPass(/*ExportSummary=*/nullptr,
                                      /*ImportSummary=*/nullptr,
                                      /*DropTypeTests=*/true));
-
-  PassManagerBuilderWrapper PMBuilder(TargetTriple, CodeGenOpts, LangOpts);
 
   // At O0 and O1 we only run the always inliner which is more efficient. At
   // higher optimization levels we run the normal inliner.
