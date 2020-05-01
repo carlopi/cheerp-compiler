@@ -2731,6 +2731,7 @@ void CodeGenFunction::InitializeVTablePointer(const VPtr &Vptr) {
   // Apply the offsets.
   Address VTableField = LoadCXXThisAddress();
 
+  llvm::Type *VTablePtrTy = nullptr;
   if (!getTarget().isByteAddressable()) {
     SmallVector<llvm::Value*, 4> GEPConstantIndexes;
 
@@ -2743,7 +2744,7 @@ void CodeGenFunction::InitializeVTablePointer(const VPtr &Vptr) {
                                     Vptr.NearestVBase ? Vptr.NearestVBase : Vptr.VTableClass, Vptr.Bases);
     GEPConstantIndexes.push_back(llvm::ConstantInt::get(Int32Ty, 0));
     VTableField = Address(Builder.CreateGEP(VTableField.getElementType(), VTableField.getPointer(), GEPConstantIndexes), VTableField.getAlignment());
-    llvm::Type *VTablePtrTy = VTableField.getElementType();
+    VTablePtrTy = VTableField.getElementType();
     VTableAddressPoint = Builder.CreateBitCast(VTableAddressPoint, VTablePtrTy);
   } else {
     if (!NonVirtualOffset.isZero() || VirtualOffset) {
@@ -2751,7 +2752,7 @@ void CodeGenFunction::InitializeVTablePointer(const VPtr &Vptr) {
         *this, VTableField, NonVirtualOffset, VirtualOffset, Vptr.VTableClass,
         Vptr.NearestVBase);
     }
-    llvm::Type *VTablePtrTy =
+    VTablePtrTy =
       llvm::FunctionType::get(CGM.Int32Ty, /*isVarArg=*/true)
           ->getPointerTo()
           ->getPointerTo();
