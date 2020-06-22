@@ -453,7 +453,7 @@ public:
                          MaybeAlign Align, bool isVolatile = false,
                          MDNode *TBAATag = nullptr, MDNode *ScopeTag = nullptr,
                          MDNode *NoAliasTag = nullptr, bool byteLayout = true) {
-    return CreateMemSet(Ptr, Val, getInt64(Size), Align, isVolatile,
+    return CreateMemSet(Ptr, Val, getInt32(Size), Align, isVolatile,
                         TBAATag, ScopeTag, NoAliasTag, byteLayout);
   }
 
@@ -529,7 +529,7 @@ public:
                              MDNode *NoAliasTag = nullptr, bool byteLayout = true),
       "Use the version that takes MaybeAlign instead") {
     return CreateMemCpy(Dst, MaybeAlign(DstAlign), Src, MaybeAlign(SrcAlign),
-                        getInt64(Size), isVolatile, TBAATag, TBAAStructTag,
+                        getInt32(Size), isVolatile, TBAATag, TBAAStructTag,
                         ScopeTag, NoAliasTag, byteLayout);
   }
 
@@ -620,7 +620,7 @@ public:
           MDNode *ScopeTag = nullptr, MDNode *NoAliasTag = nullptr, bool byteLayout = true),
       "Use the version that takes MaybeAlign") {
     return CreateMemMove(Dst, MaybeAlign(DstAlign), Src, MaybeAlign(SrcAlign),
-                         getInt64(Size), isVolatile, TBAATag, ScopeTag,
+                         getInt32(Size), isVolatile, TBAATag, ScopeTag,
                          NoAliasTag, byteLayout);
   }
   CallInst *CreateMemMove(Value *Dst, MaybeAlign DstAlign, Value *Src,
@@ -628,7 +628,7 @@ public:
                           bool isVolatile = false, MDNode *TBAATag = nullptr,
                           MDNode *ScopeTag = nullptr,
                           MDNode *NoAliasTag = nullptr) {
-    return CreateMemMove(Dst, DstAlign, Src, SrcAlign, getInt64(Size),
+    return CreateMemMove(Dst, DstAlign, Src, SrcAlign, getInt32(Size),
                          isVolatile, TBAATag, ScopeTag, NoAliasTag);
   }
   /// FIXME: Remove this function once transition to Align is over.
