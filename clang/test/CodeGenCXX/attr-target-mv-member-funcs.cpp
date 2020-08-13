@@ -74,13 +74,13 @@ int templ_use() {
 // LINUX: @_ZN5templIdE3fooEi.ifunc = weak_odr ifunc i32 (%struct.templ.0*, i32), i32 (%struct.templ.0*, i32)* ()* @_ZN5templIdE3fooEi.resolver
 
 // LINUX: define i32 @_Z3barv()
-// LINUX: %s = alloca %struct.S, align 1
-// LINUX: %s2 = alloca %struct.S, align 1
-// LINUX: %C = alloca %struct.ConvertTo, align 1
-// LINUX: call dereferenceable(1) %struct.S* @_ZN1SaSERKS_.ifunc(%struct.S* %s2
-// LINUX: call void @_ZNK9ConvertTocv1SEv.ifunc(%struct.ConvertTo* %C)
-// LINUX: call dereferenceable(1) %struct.S* @_ZN1SaSERKS_.ifunc(%struct.S* %s2
-// LINUX: call i32 @_ZN1S3fooEi.ifunc(%struct.S* %s, i32 0)
+// LINUX: %s = alloca %struct._Z1S, align 1
+// LINUX: %s2 = alloca %struct._Z1S, align 1
+// LINUX: %C = alloca %struct._Z9ConvertTo, align 1
+// LINUX: call dereferenceable(1) %struct._Z1S* @_ZN1SaSERKS_.ifunc(%struct._Z1S* %s2
+// LINUX: call void @_ZNK9ConvertTocv1SEv.ifunc(%struct._Z9ConvertTo* %C)
+// LINUX: call dereferenceable(1) %struct._Z1S* @_ZN1SaSERKS_.ifunc(%struct._Z1S* %s2
+// LINUX: call i32 @_ZN1S3fooEi.ifunc(%struct._Z1S* %s, i32 0)
 
 // WINDOWS: define dso_local i32 @"?bar@@YAHXZ"()
 // WINDOWS: %s = alloca %struct.S, align 1
