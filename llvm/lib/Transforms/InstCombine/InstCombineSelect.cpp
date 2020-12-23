@@ -1495,6 +1495,9 @@ Instruction *InstCombiner::foldSelectInstWithICmp(SelectInst &SI,
   if (Value *V = foldSelectCttzCtlz(ICI, TrueVal, FalseVal, Builder))
     return replaceInstUsesWith(SI, V);
 
+  if (!DL.isByteAddressable())
+    return Changed ? &SI : nullptr;
+
   if (Value *V = canonicalizeSaturatedSubtract(ICI, TrueVal, FalseVal, Builder))
     return replaceInstUsesWith(SI, V);
 
