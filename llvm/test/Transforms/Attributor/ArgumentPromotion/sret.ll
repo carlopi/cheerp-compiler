@@ -9,7 +9,7 @@ define internal void @add({i32, i32}* %this, i32* sret %r) {
 ; CHECK-SAME: ({ i32, i32 }* noalias nocapture nofree nonnull readonly align 8 dereferenceable(8) [[THIS:%.*]], i32* noalias nocapture nofree nonnull sret writeonly align 4 dereferenceable(4) [[R:%.*]])
 ; CHECK-NEXT:    [[AP:%.*]] = getelementptr { i32, i32 }, { i32, i32 }* [[THIS]], i32 0, i32 0
 ; CHECK-NEXT:    [[BP:%.*]] = getelementptr { i32, i32 }, { i32, i32 }* [[THIS]], i32 0, i32 1
-; CHECK-NEXT:    [[A:%.*]] = load i32, i32* [[AP]], align 8
+; CHECK-NEXT:    [[A:%.*]] = load i32, i32* [[AP]]
 ; CHECK-NEXT:    [[B:%.*]] = load i32, i32* [[BP]]
 ; CHECK-NEXT:    [[AB:%.*]] = add i32 [[A]], [[B]]
 ; CHECK-NEXT:    store i32 [[AB]], i32* [[R]], align 4

@@ -239,9 +239,9 @@ define void @fptoui_8f64_8i16() #0 {
 ; SSE-NEXT:    ret void
 ;
 ; AVX-LABEL: @fptoui_8f64_8i16(
-; AVX-NEXT:    [[TMP1:%.*]] = load <8 x double>, <8 x double>* bitcast ([8 x double]* @src64 to <8 x double>*), align 8
+; AVX-NEXT:    [[TMP1:%.*]] = load <8 x double>, <8 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 0) to <8 x double>*), align 8
 ; AVX-NEXT:    [[TMP2:%.*]] = fptoui <8 x double> [[TMP1]] to <8 x i16>
-; AVX-NEXT:    store <8 x i16> [[TMP2]], <8 x i16>* bitcast ([32 x i16]* @dst16 to <8 x i16>*), align 2
+; AVX-NEXT:    store <8 x i16> [[TMP2]], <8 x i16>* bitcast (i16* getelementptr inbounds ([32 x i16], [32 x i16]* @dst16, i32 0, i64 0) to <8 x i16>*), align 2
 ; AVX-NEXT:    ret void
 ;
   %a0 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 0), align 8

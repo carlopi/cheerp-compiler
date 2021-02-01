@@ -15,9 +15,9 @@ define internal void @f(%struct.ss* byval  %b) nounwind  {
 ; CHECK-NEXT:    [[B_PRIV_0_1:%.*]] = getelementptr [[STRUCT_SS]], %struct.ss* [[B_PRIV]], i32 0, i32 1
 ; CHECK-NEXT:    store i64 [[TMP1]], i64* [[B_PRIV_0_1]]
 ; CHECK-NEXT:    [[TMP:%.*]] = getelementptr [[STRUCT_SS]], %struct.ss* [[B_PRIV]], i32 0, i32 0
-; CHECK-NEXT:    [[TMP1:%.*]] = load i32, i32* [[TMP]], align 8
+; CHECK-NEXT:    [[TMP1:%.*]] = load i32, i32* [[TMP]], align 4
 ; CHECK-NEXT:    [[TMP2:%.*]] = add i32 [[TMP1]], 1
-; CHECK-NEXT:    store i32 [[TMP2]], i32* [[TMP]], align 8
+; CHECK-NEXT:    store i32 [[TMP2]], i32* [[TMP]], align 4
 ; CHECK-NEXT:    ret void
 ;
 entry:
@@ -39,9 +39,9 @@ define internal void @g(%struct.ss* byval align 32 %b) nounwind {
 ; CHECK-NEXT:    [[B_PRIV_0_1:%.*]] = getelementptr [[STRUCT_SS]], %struct.ss* [[B_PRIV]], i32 0, i32 1
 ; CHECK-NEXT:    store i64 [[TMP1]], i64* [[B_PRIV_0_1]]
 ; CHECK-NEXT:    [[TMP:%.*]] = getelementptr [[STRUCT_SS]], %struct.ss* [[B_PRIV]], i32 0, i32 0
-; CHECK-NEXT:    [[TMP1:%.*]] = load i32, i32* [[TMP]], align 32
+; CHECK-NEXT:    [[TMP1:%.*]] = load i32, i32* [[TMP]], align 4
 ; CHECK-NEXT:    [[TMP2:%.*]] = add i32 [[TMP1]], 1
-; CHECK-NEXT:    store i32 [[TMP2]], i32* [[TMP]], align 32
+; CHECK-NEXT:    store i32 [[TMP2]], i32* [[TMP]], align 4
 ; CHECK-NEXT:    ret void
 ;
 entry:

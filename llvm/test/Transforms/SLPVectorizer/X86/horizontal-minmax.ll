@@ -11,7 +11,7 @@
 
 define i32 @maxi8(i32) {
 ; CHECK-LABEL: @maxi8(
-; CHECK-NEXT:    [[TMP2:%.*]] = load <8 x i32>, <8 x i32>* bitcast ([32 x i32]* @arr to <8 x i32>*), align 16
+; CHECK-NEXT:    [[TMP2:%.*]] = load <8 x i32>, <8 x i32>* bitcast (i32* getelementptr inbounds ([32 x i32], [32 x i32]* @arr, i64 0, i64 0) to <8 x i32>*), align 16
 ; CHECK-NEXT:    [[RDX_SHUF:%.*]] = shufflevector <8 x i32> [[TMP2]], <8 x i32> undef, <8 x i32> <i32 4, i32 5, i32 6, i32 7, i32 undef, i32 undef, i32 undef, i32 undef>
 ; CHECK-NEXT:    [[RDX_MINMAX_CMP:%.*]] = icmp sgt <8 x i32> [[TMP2]], [[RDX_SHUF]]
 ; CHECK-NEXT:    [[RDX_MINMAX_SELECT:%.*]] = select <8 x i1> [[RDX_MINMAX_CMP]], <8 x i32> [[TMP2]], <8 x i32> [[RDX_SHUF]]
@@ -51,7 +51,7 @@ define i32 @maxi8(i32) {
 
 define i32 @maxi16(i32) {
 ; CHECK-LABEL: @maxi16(
-; CHECK-NEXT:    [[TMP2:%.*]] = load <16 x i32>, <16 x i32>* bitcast ([32 x i32]* @arr to <16 x i32>*), align 16
+; CHECK-NEXT:    [[TMP2:%.*]] = load <16 x i32>, <16 x i32>* bitcast (i32* getelementptr inbounds ([32 x i32], [32 x i32]* @arr, i64 0, i64 0) to <16 x i32>*), align 16
 ; CHECK-NEXT:    [[RDX_SHUF:%.*]] = shufflevector <16 x i32> [[TMP2]], <16 x i32> undef, <16 x i32> <i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef>
 ; CHECK-NEXT:    [[RDX_MINMAX_CMP:%.*]] = icmp sgt <16 x i32> [[TMP2]], [[RDX_SHUF]]
 ; CHECK-NEXT:    [[RDX_MINMAX_SELECT:%.*]] = select <16 x i1> [[RDX_MINMAX_CMP]], <16 x i32> [[TMP2]], <16 x i32> [[RDX_SHUF]]
@@ -118,7 +118,7 @@ define i32 @maxi16(i32) {
 
 define i32 @maxi32(i32) {
 ; CHECK-LABEL: @maxi32(
-; CHECK-NEXT:    [[TMP2:%.*]] = load <32 x i32>, <32 x i32>* bitcast ([32 x i32]* @arr to <32 x i32>*), align 16
+; CHECK-NEXT:    [[TMP2:%.*]] = load <32 x i32>, <32 x i32>* bitcast (i32* getelementptr inbounds ([32 x i32], [32 x i32]* @arr, i64 0, i64 0) to <32 x i32>*), align 16
 ; CHECK-NEXT:    [[RDX_SHUF:%.*]] = shufflevector <32 x i32> [[TMP2]], <32 x i32> undef, <32 x i32> <i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef>
 ; CHECK-NEXT:    [[RDX_MINMAX_CMP:%.*]] = icmp sgt <32 x i32> [[TMP2]], [[RDX_SHUF]]
 ; CHECK-NEXT:    [[RDX_MINMAX_SELECT:%.*]] = select <32 x i1> [[RDX_MINMAX_CMP]], <32 x i32> [[TMP2]], <32 x i32> [[RDX_SHUF]]
@@ -236,7 +236,7 @@ define i32 @maxi32(i32) {
 
 define float @maxf8(float) {
 ; CHECK-LABEL: @maxf8(
-; CHECK-NEXT:    [[TMP2:%.*]] = load <8 x float>, <8 x float>* bitcast ([32 x float]* @arr1 to <8 x float>*), align 16
+; CHECK-NEXT:    [[TMP2:%.*]] = load <8 x float>, <8 x float>* bitcast (float* getelementptr inbounds ([32 x float], [32 x float]* @arr1, i64 0, i64 0) to <8 x float>*), align 16
 ; CHECK-NEXT:    [[RDX_SHUF:%.*]] = shufflevector <8 x float> [[TMP2]], <8 x float> undef, <8 x i32> <i32 4, i32 5, i32 6, i32 7, i32 undef, i32 undef, i32 undef, i32 undef>
 ; CHECK-NEXT:    [[RDX_MINMAX_CMP:%.*]] = fcmp fast ogt <8 x float> [[TMP2]], [[RDX_SHUF]]
 ; CHECK-NEXT:    [[RDX_MINMAX_SELECT:%.*]] = select <8 x i1> [[RDX_MINMAX_CMP]], <8 x float> [[TMP2]], <8 x float> [[RDX_SHUF]]
@@ -276,7 +276,7 @@ define float @maxf8(float) {
 
 define float @maxf16(float) {
 ; CHECK-LABEL: @maxf16(
-; CHECK-NEXT:    [[TMP2:%.*]] = load <16 x float>, <16 x float>* bitcast ([32 x float]* @arr1 to <16 x float>*), align 16
+; CHECK-NEXT:    [[TMP2:%.*]] = load <16 x float>, <16 x float>* bitcast (float* getelementptr inbounds ([32 x float], [32 x float]* @arr1, i64 0, i64 0) to <16 x float>*), align 16
 ; CHECK-NEXT:    [[RDX_SHUF:%.*]] = shufflevector <16 x float> [[TMP2]], <16 x float> undef, <16 x i32> <i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef>
 ; CHECK-NEXT:    [[RDX_MINMAX_CMP:%.*]] = fcmp fast ogt <16 x float> [[TMP2]], [[RDX_SHUF]]
 ; CHECK-NEXT:    [[RDX_MINMAX_SELECT:%.*]] = select <16 x i1> [[RDX_MINMAX_CMP]], <16 x float> [[TMP2]], <16 x float> [[RDX_SHUF]]
@@ -343,7 +343,7 @@ define float @maxf16(float) {
 
 define float @maxf32(float) {
 ; CHECK-LABEL: @maxf32(
-; CHECK-NEXT:    [[TMP2:%.*]] = load <32 x float>, <32 x float>* bitcast ([32 x float]* @arr1 to <32 x float>*), align 16
+; CHECK-NEXT:    [[TMP2:%.*]] = load <32 x float>, <32 x float>* bitcast (float* getelementptr inbounds ([32 x float], [32 x float]* @arr1, i64 0, i64 0) to <32 x float>*), align 16
 ; CHECK-NEXT:    [[RDX_SHUF:%.*]] = shufflevector <32 x float> [[TMP2]], <32 x float> undef, <32 x i32> <i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef>
 ; CHECK-NEXT:    [[RDX_MINMAX_CMP:%.*]] = fcmp fast ogt <32 x float> [[TMP2]], [[RDX_SHUF]]
 ; CHECK-NEXT:    [[RDX_MINMAX_SELECT:%.*]] = select <32 x i1> [[RDX_MINMAX_CMP]], <32 x float> [[TMP2]], <32 x float> [[RDX_SHUF]]
@@ -486,7 +486,7 @@ define i32 @maxi8_mutiple_uses(i32) {
 ; DEFAULT-NEXT:    ret i32 [[TMP14]]
 ;
 ; THRESH-LABEL: @maxi8_mutiple_uses(
-; THRESH-NEXT:    [[TMP2:%.*]] = load <2 x i32>, <2 x i32>* bitcast ([32 x i32]* @arr to <2 x i32>*), align 16
+; THRESH-NEXT:    [[TMP2:%.*]] = load <2 x i32>, <2 x i32>* bitcast (i32* getelementptr inbounds ([32 x i32], [32 x i32]* @arr, i64 0, i64 0) to <2 x i32>*), align 16
 ; THRESH-NEXT:    [[TMP3:%.*]] = extractelement <2 x i32> [[TMP2]], i32 0
 ; THRESH-NEXT:    [[TMP4:%.*]] = extractelement <2 x i32> [[TMP2]], i32 1
 ; THRESH-NEXT:    [[TMP5:%.*]] = load <4 x i32>, <4 x i32>* bitcast (i32* getelementptr inbounds ([32 x i32], [32 x i32]* @arr, i64 0, i64 2) to <4 x i32>*), align 8
@@ -570,7 +570,7 @@ define i32 @maxi8_wrong_parent(i32) {
 ; DEFAULT-NEXT:    ret i32 [[OP_EXTRA]]
 ;
 ; THRESH-LABEL: @maxi8_wrong_parent(
-; THRESH-NEXT:    [[TMP2:%.*]] = load <2 x i32>, <2 x i32>* bitcast ([32 x i32]* @arr to <2 x i32>*), align 16
+; THRESH-NEXT:    [[TMP2:%.*]] = load <2 x i32>, <2 x i32>* bitcast (i32* getelementptr inbounds ([32 x i32], [32 x i32]* @arr, i64 0, i64 0) to <2 x i32>*), align 16
 ; THRESH-NEXT:    [[TMP3:%.*]] = extractelement <2 x i32> [[TMP2]], i32 0
 ; THRESH-NEXT:    [[TMP4:%.*]] = extractelement <2 x i32> [[TMP2]], i32 1
 ; THRESH-NEXT:    [[TMP5:%.*]] = icmp sgt i32 [[TMP3]], [[TMP4]]
@@ -658,7 +658,7 @@ define i32* @maxp8(i32) {
 ; DEFAULT-NEXT:    ret i32* [[TMP23]]
 ;
 ; THRESH-LABEL: @maxp8(
-; THRESH-NEXT:    [[TMP2:%.*]] = load <2 x i32*>, <2 x i32*>* bitcast ([32 x i32*]* @arrp to <2 x i32*>*), align 16
+; THRESH-NEXT:    [[TMP2:%.*]] = load <2 x i32*>, <2 x i32*>* bitcast (i32** getelementptr inbounds ([32 x i32*], [32 x i32*]* @arrp, i64 0, i64 0) to <2 x i32*>*), align 16
 ; THRESH-NEXT:    [[TMP3:%.*]] = extractelement <2 x i32*> [[TMP2]], i32 0
 ; THRESH-NEXT:    [[TMP4:%.*]] = extractelement <2 x i32*> [[TMP2]], i32 1
 ; THRESH-NEXT:    [[TMP5:%.*]] = icmp ugt i32* [[TMP3]], [[TMP4]]

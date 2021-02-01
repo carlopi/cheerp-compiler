@@ -16,7 +16,7 @@ define internal void @vfu1(%struct.MYstr* byval align 4 %u) nounwind {
 ; CHECK-NEXT:    [[TMP2:%.*]] = getelementptr [[STRUCT_MYSTR]], %struct.MYstr* [[U_PRIV]], i32 0, i32 1
 ; CHECK-NEXT:    store i32 99, i32* [[TMP2]], align 4
 ; CHECK-NEXT:    [[TMP3:%.*]] = getelementptr [[STRUCT_MYSTR]], %struct.MYstr* [[U_PRIV]], i32 0, i32 0
-; CHECK-NEXT:    store i8 97, i8* [[TMP3]], align 8
+; CHECK-NEXT:    store i8 97, i8* [[TMP3]], align 4
 ; CHECK-NEXT:    br label [[RETURN:%.*]]
 ; CHECK:       return:
 ; CHECK-NEXT:    ret void
@@ -44,7 +44,7 @@ define internal i32 @vfu2(%struct.MYstr* byval align 4 %u) nounwind readonly {
 ; CHECK-NEXT:    [[TMP2:%.*]] = getelementptr [[STRUCT_MYSTR]], %struct.MYstr* @mystr, i32 0, i32 1
 ; CHECK-NEXT:    [[TMP3:%.*]] = load i32, i32* [[TMP2]]
 ; CHECK-NEXT:    [[TMP4:%.*]] = getelementptr [[STRUCT_MYSTR]], %struct.MYstr* @mystr, i32 0, i32 0
-; CHECK-NEXT:    [[TMP5:%.*]] = load i8, i8* [[TMP4]], align 8
+; CHECK-NEXT:    [[TMP5:%.*]] = load i8, i8* [[TMP4]]
 ; CHECK-NEXT:    [[TMP6:%.*]] = zext i8 [[TMP5]] to i32
 ; CHECK-NEXT:    [[TMP7:%.*]] = add i32 [[TMP6]], [[TMP3]]
 ; CHECK-NEXT:    ret i32 [[TMP7]]
@@ -94,7 +94,7 @@ define internal i32 @vfu2_v2(%struct.MYstr* byval align 4 %u) nounwind readonly 
 ; CHECK-NEXT:    [[TMP2:%.*]] = getelementptr [[STRUCT_MYSTR]], %struct.MYstr* [[U_PRIV]], i32 0, i32 1
 ; CHECK-NEXT:    [[TMP3:%.*]] = load i32, i32* [[TMP2]]
 ; CHECK-NEXT:    [[TMP4:%.*]] = getelementptr [[STRUCT_MYSTR]], %struct.MYstr* [[U_PRIV]], i32 0, i32 0
-; CHECK-NEXT:    [[TMP5:%.*]] = load i8, i8* [[TMP4]], align 8
+; CHECK-NEXT:    [[TMP5:%.*]] = load i8, i8* [[TMP4]]
 ; CHECK-NEXT:    [[TMP6:%.*]] = zext i8 [[TMP5]] to i32
 ; CHECK-NEXT:    [[TMP7:%.*]] = add i32 [[TMP6]], [[TMP3]]
 ; CHECK-NEXT:    ret i32 [[TMP7]]
