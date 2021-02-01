@@ -27,6 +27,8 @@
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Local.h"
+#include "llvm/Cheerp/GlobalDepsAnalyzer.h"
+
 using namespace llvm;
 
 #define DEBUG_TYPE "dce"
@@ -70,6 +72,7 @@ struct DeadInstElimination : public FunctionPass {
 
     void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.setPreservesCFG();
+      AU.addPreserved<cheerp::GlobalDepsAnalyzer>();
     }
 };
 }
@@ -203,6 +206,7 @@ struct DCELegacyPass : public FunctionPass {
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
     AU.setPreservesCFG();
+    AU.addPreserved<cheerp::GlobalDepsAnalyzer>();
   }
 };
 }
