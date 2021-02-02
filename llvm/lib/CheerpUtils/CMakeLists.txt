@@ -11,7 +11,6 @@ add_llvm_component_library(LLVMCheerpUtils
   GEPOptimizer.cpp
   CFGPasses.cpp
   PHIHandler.cpp
-  ReplaceNopCastsAndByteSwaps.cpp
   Registerize.cpp
   StructMemFuncLowering.cpp
   TypeOptimizer.cpp

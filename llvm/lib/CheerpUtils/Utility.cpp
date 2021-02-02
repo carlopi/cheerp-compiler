@@ -1283,7 +1283,6 @@ void initializeCheerpOpts(PassRegistry &Registry)
 	initializePointerAnalyzerPass(Registry);
 	initializeRegisterizePass(Registry);
 	initializeStructMemFuncLoweringPass(Registry);
-	initializeReplaceNopCastsAndByteSwapsPass(Registry);
 	initializeTypeOptimizerPass(Registry);
 	initializeDelayInstsPass(Registry);
 	initializeExpandStructRegsPass(Registry);
