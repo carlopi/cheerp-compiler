@@ -318,6 +318,7 @@ int main(int argc, char **argv) {
   initializeHardwareLoopsPass(*Registry);
   initializeCheerpOpts(*Registry);
   initializePreExecutePass(*Registry);
+  initializeReplaceNopCastsAndByteSwapsPass(*Registry);
   initializeLowerSwitchPass(*Registry);
 
   // Initialize debugging passes.
