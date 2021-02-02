@@ -317,6 +317,7 @@ int main(int argc, char **argv) {
   initializeExpandReductionsPass(*Registry);
   initializeHardwareLoopsPass(*Registry);
   initializeCheerpOpts(*Registry);
+  initializePreExecutePass(*Registry);
   initializeLowerSwitchPass(*Registry);
 
   // Initialize debugging passes.

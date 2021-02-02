@@ -1286,7 +1286,6 @@ void initializeCheerpOpts(PassRegistry &Registry)
 	initializeReplaceNopCastsAndByteSwapsPass(Registry);
 	initializeTypeOptimizerPass(Registry);
 	initializeDelayInstsPass(Registry);
-	initializePreExecutePass(Registry);
 	initializeExpandStructRegsPass(Registry);
 	initializeFreeAndDeleteRemovalPass(Registry);
 	initializeGEPOptimizerPass(Registry);
