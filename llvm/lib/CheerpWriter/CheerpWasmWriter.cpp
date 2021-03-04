@@ -3333,6 +3333,8 @@ const BasicBlock* CheerpWasmWriter::compileTokens(WasmBuffer& code,
 		return std::distance(ScopeStack.rbegin(), it);
 	};
 
+	BranchHints hints;
+	hints.start = code.tell();
 	for (TokenList::const_iterator it = Tokens.begin(), ie = Tokens.end(); it != ie; ++it)
 	{
 		const Token& T = *it;
@@ -3386,6 +3388,15 @@ const BasicBlock* CheerpWasmWriter::compileTokens(WasmBuffer& code,
 				compileCondition(code, bi->getCondition(), IfNot);
 				const int Depth = getDepth(T.getMatch());
 				teeLocals.clearTopmostCandidates(code, Depth+1);
+				uint64_t weight_false = 0;
+				uint64_t weight_true = 0;
+				if (bi->extractProfMetadata(weight_true, weight_false))
+				{
+					bool dir = weight_false < weight_true;
+					if (IfNot)
+						dir = !dir;
+					hints.hints.push_back(std::make_pair(code.tell(), dir));
+				}
 				encodeInst(WasmU32Opcode::BR_IF, Depth, code);
 				break;
 			}
@@ -3398,6 +3409,15 @@ const BasicBlock* CheerpWasmWriter::compileTokens(WasmBuffer& code,
 				assert(bi->isConditional());
 				compileCondition(code, bi->getCondition(), IfNot);
 				teeLocals.addIndentation(code);
+				uint64_t weight_false = 0;
+				uint64_t weight_true = 0;
+				if (bi->extractProfMetadata(weight_true, weight_false))
+				{
+					bool dir = weight_false < weight_true;
+					if (IfNot)
+						dir = !dir;
+					hints.hints.push_back(std::make_pair(code.tell(), dir));
+				}
 				encodeInst(WasmU32Opcode::IF, getResultKind(T), code);
 				ScopeStack.push_back(&T);
 				break;
@@ -3460,6 +3480,8 @@ const BasicBlock* CheerpWasmWriter::compileTokens(WasmBuffer& code,
 				break;
 		}
 	}
+	if(!hints.hints.empty())
+		branchHints.push_back(std::make_pair(currentFun,std::move(hints)));
 	return lastDepth0Block;
 }
 
@@ -4167,38 +4189,68 @@ void CheerpWasmWriter::compileElementSection()
 
 void CheerpWasmWriter::compileCodeSection()
 {
-	Section section(0x0a, "Code", this);
-
-	// Encode the number of methods in the code section.
-	uint32_t count = linearHelper.functions().size();
-	count = std::min(count, COMPILE_METHOD_LIMIT);
-	encodeULEB128(count, section);
-#if WASM_DUMP_METHODS
-	llvm::errs() << "method count: " << count << '\n';
-#endif
-
-	size_t i = 0;
-
-	for (const Function* F: linearHelper.functions())
 	{
-		Chunk<128> method;
-#if WASM_DUMP_METHODS
-		llvm::errs() << i << " method name: " << F->getName() << '\n';
-#endif
-		compileMethod(method, *F);
+		Section section(0x0a, "Code", this);
 
-		filterNop(method.buf());
-		nopLocations.clear();
+		// Encode the number of methods in the code section.
+		uint32_t count = linearHelper.functions().size();
+		count = std::min(count, COMPILE_METHOD_LIMIT);
+		encodeULEB128(count, section);
+#if WASM_DUMP_METHODS
+		llvm::errs() << "method count: " << count << '\n';
+#endif
+
+		size_t i = 0;
+
+		for (const Function* F: linearHelper.functions())
+		{
+			Chunk<128> method;
+#if WASM_DUMP_METHODS
+			llvm::errs() << i << " method name: " << F->getName() << '\n';
+#endif
+			compileMethod(method, *F);
+			if(!branchHints.empty() && branchHints.back().first == F)
+			{
+				auto& hints = branchHints.back();
+				for(uint32_t loc: nopLocations)
+				{
+					for(auto& h: hints.second.hints)
+					{
+						if(h.first > loc)
+							h.first--;
+					}
+
+				}
+			}
+
+			filterNop(method.buf());
+			nopLocations.clear();
 
 #if WASM_DUMP_METHOD_DATA
-		llvm::errs() << "method length: " << method.tell() << '\n';
-		llvm::errs() << "method: " << string_to_hex(method.str()) << '\n';
+			llvm::errs() << "method length: " << method.tell() << '\n';
+			llvm::errs() << "method: " << string_to_hex(method.str()) << '\n';
 #endif
-		encodeULEB128(method.tell(), section);
-		section << method.str();
+			encodeULEB128(method.tell(), section);
+			section << method.str();
 
-		if (++i == COMPILE_METHOD_LIMIT)
-			break; // TODO
+			if (++i == COMPILE_METHOD_LIMIT)
+				break; // TODO
+		}
+	}
+	Section hintsSection(0x0, "branchHints", this);
+	//encodeULEB128(branchHints.size(), hintsSection);
+	for(auto& hints: branchHints)
+	{
+		uint32_t id = linearHelper.getFunctionIds().at(hints.first);
+		errs() << "func "<<hints.first->getName()<<"("<<id<<") "<<hints.second.hints.size()<<"\n";
+		encodeULEB128(id, hintsSection);
+		encodeULEB128(hints.second.hints.size(), hintsSection);
+		for(auto& hint: hints.second.hints)
+		{
+			errs()<<"\tbr "<<hint.first-hints.second.start<<" "<<hint.second<<"\n";
+			encodeULEB128(hint.first-hints.second.start, hintsSection);
+			encodeULEB128(hint.second, hintsSection);
+		}
 	}
 }
 

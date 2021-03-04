@@ -28,6 +28,9 @@
 #include "llvm/IR/DebugInfo.h"
 #include "llvm/Support/FormattedStream.h"
 
+#include <vector>
+#include <unordered_map>
+
 namespace cheerp
 {
 
@@ -60,11 +63,18 @@ public:
 	~Section();
 };
 
+struct BranchHints
+{
+	uint32_t start;
+	std::vector<std::pair<uint32_t, bool>> hints;
+};
+
 class CheerpWasmWriter
 {
 public:
 	bool shouldDefer(const llvm::Instruction* I) const;
 
+	std::vector<std::pair<const llvm::Function*, BranchHints>> branchHints;
 private:
 	llvm::Module& module;
 	llvm::Pass& pass;
