@@ -181,7 +181,7 @@ bool GlobalDepsAnalyzer::runOnModule( llvm::Module & module )
 	assert(DL);
 	VisitedSet visited;
 
-	simplifyCalls(module);
+	//simplifyCalls(module);
 
 	if (!llcPass)
 	{
@@ -208,7 +208,7 @@ bool GlobalDepsAnalyzer::runOnModule( llvm::Module & module )
 
 	// Replace calls like 'printf("Hello!")' with 'puts("Hello!")'.
 	for (Function& F : module.getFunctionList()) {
-		F.setPersonalityFn(nullptr);
+		//F.setPersonalityFn(nullptr);
 		bool asmjs = F.getSection() == StringRef("asmjs");
 		for (BasicBlock& bb : F)
 		{
@@ -1143,6 +1143,11 @@ void GlobalDepsAnalyzer::visitFunction(const Function* F, VisitedSet& visited)
 {
 	VisitedSet NewvisitPath;
 
+	if(F->hasPersonalityFn())
+	{
+		SubExprVec Newsubexpr;
+		visitConstant(F->getPersonalityFn(), visited, Newsubexpr);
+	}
 	const Module* module = F->getParent();
 	bool isAsmJS = F->getSection() == StringRef("asmjs");
 	if (isAsmJS)
