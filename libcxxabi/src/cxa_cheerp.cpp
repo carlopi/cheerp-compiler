@@ -128,7 +128,7 @@ __gxx_personality_v0
 				ex->adjustedPtr = *static_cast<void**>(ex->adjustedPtr);
 				client::console.log("deref!");
 			}
-			if(adjustedOffset != 0)
+			if(adjustedOffset != 0 && ex->adjustedPtr != nullptr)
 			{
 				client::console.log("non zero offset!: ", adjustedOffset);
 				ex->adjustedPtr = __builtin_cheerp_downcast<void,void>(ex->adjustedPtr, -adjustedOffset);
