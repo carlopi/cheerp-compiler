@@ -2905,7 +2905,9 @@ CheerpWriter::COMPILE_INSTRUCTION_FEEDBACK CheerpWriter::compileTerminatorInstru
 		}
 		case Instruction::Resume:
 		{
-			stream << "throw eSlot;" << NewLine;
+			stream << "throw ";
+			compileOperand(I.getOperand(0));
+			stream << ".a0[0].a0;" << NewLine;
 			return COMPILE_OK;
 		}
 		case Instruction::Invoke:
@@ -2970,7 +2972,9 @@ CheerpWriter::COMPILE_INSTRUCTION_FEEDBACK CheerpWriter::compileNotInlineableIns
 			assert(C);
 			Value* PersonalityF = C->getOperand(0);
 			compileOperand(PersonalityF);
-			stream <<"(eSlot,[";
+			stream <<'(';
+			stream << namegen.getName(&I);
+			stream << ",[";
 			const LandingPadInst& LP = cast<LandingPadInst>(I);
 			for(unsigned i = 0; i < LP.getNumClauses(); i++)
 			{
@@ -5095,8 +5099,9 @@ void CheerpWriter::compileTokens(const TokenList& Tokens)
 			}
 			case Token::TK_Catch:
 			{
-				stream << "}catch(e){" << NewLine;
-				stream << "eSlot=e;" << NewLine;
+				stream << "}catch(" << namegen.getBuiltinName(NameGenerator::EXCEPTION) << "){" << NewLine;
+				assert(T.getBB()->isLandingPad());
+				stream << namegen.getName(T.getBB()->getLandingPadInst()) << "=e;" << NewLine;
 				break;
 			}
 			case Token::TK_BrIf:
@@ -5524,7 +5529,6 @@ void CheerpWriter::compileHandleVAArg()
 
 void CheerpWriter::compileCheerpException()
 {
-	stream << "var eSlot=null;" << NewLine;
 	stream << "function CheerpException(m){" << NewLine;
 	stream << "var instance=new Error('Uncaught C++ exception: '+m);" << NewLine;
 	stream << "instance.name='CheerpException';" << NewLine;
