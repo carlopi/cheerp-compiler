@@ -5070,6 +5070,9 @@ static llvm::FunctionCallee getClangCallTerminateFn(CodeGenModule &CGM) {
   if (fn->empty()) {
     fn->setDoesNotThrow();
     fn->setDoesNotReturn();
+    bool asmjs = CGM.getContext().getTargetInfo().getTriple().getEnvironment() == llvm::Triple::WebAssembly;
+	if (asmjs)
+	  fn->setSection("asmjs");
 
     // What we really want is to massively penalize inlining without
     // forbidding it completely.  The difference between that and

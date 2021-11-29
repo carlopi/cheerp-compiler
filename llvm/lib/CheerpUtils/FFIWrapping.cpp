@@ -11,6 +11,7 @@
 
 #include "llvm/Cheerp/Utility.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/InstIterator.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
 
@@ -29,7 +30,8 @@ static Function* wrapImport(Module& M, const Function* Orig)
 	for(auto& arg: Wrapper->args())
 		params.push_back(&arg);
 	CallInst* ForwardCall = Builder.CreateCall(const_cast<Function*>(Orig), params);
-	Value* Ret = ForwardCall->getType()->isVoidTy() ? nullptr : ForwardCall;
+	Type* RetTy = ForwardCall->getType();
+	Value* Ret = RetTy->isVoidTy() ? nullptr : ForwardCall;
 	Builder.CreateRet(Ret);
 
 	Wrapper->setSection("asmjs");
@@ -49,6 +51,96 @@ static Function* wrapGlobal(Module& M, GlobalVariable* G)
 	BasicBlock* Entry = BasicBlock::Create(M.getContext(),"entry", Wrapper);
 	IRBuilder<> Builder(Entry);
 	Builder.CreateRet(G);
+
+	return Wrapper;
+}
+
+static CallInst* copyInvokeToCall(InvokeInst* IV)
+{
+      SmallVector<Value *, 16> CallArgs(IV->arg_begin(), IV->arg_end());
+      SmallVector<OperandBundleDef, 1> OpBundles;
+      IV->getOperandBundlesAsDefs(OpBundles);
+      // Insert a normal call instruction...
+      CallInst *NewCall =
+          CallInst::Create(IV->getFunctionType(), IV->getCalledOperand(),
+                           CallArgs, OpBundles, "", IV);
+      NewCall->takeName(IV);
+      NewCall->setCallingConv(IV->getCallingConv());
+      NewCall->setAttributes(IV->getAttributes());
+      NewCall->setDebugLoc(IV->getDebugLoc());
+	  return NewCall;
+}
+static GlobalVariable* getOrInsertHelperGlobal(Module& M)
+{
+    auto* Ty = llvm::StructType::getTypeByName(M.getContext(), "struct._ZN10__cxxabiv119__cheerp_landingpadE");
+	assert(Ty);
+	GlobalVariable* G = cast<GlobalVariable>(M.getOrInsertGlobal("__cheerpExceptionHelperGlobal", Ty->getPointerTo(), [&M, Ty]()
+	{
+		auto* g = new GlobalVariable(M, Ty->getPointerTo(), false, GlobalVariable::ExternalLinkage, ConstantPointerNull::get(Ty->getPointerTo()));
+		g->setName("__cheerpExceptionHelperGlobal");
+		g->setLinkage(GlobalVariable::ExternalLinkage);
+		if (Ty->hasAsmJS())
+			g->setSection("asmjs");
+		return g;
+	}));
+	return G;
+	
+}
+static Function* wrapInvoke(Module& M, InvokeInst& IV, DenseSet<Instruction*>& ToRemove)
+{
+
+	FunctionType* Ty = IV.getFunctionType();
+	Function* F = IV.getCalledFunction();
+	assert(F);
+	Function* Wrapper = cast<Function>(M.getOrInsertFunction(Twine("__invoke_wrapper__",F->getName()).str(), Ty).getCallee());
+	if (!Wrapper->empty())
+		return Wrapper;
+	Wrapper->setPersonalityFn(IV.getParent()->getParent()->getPersonalityFn());
+	BasicBlock* Entry = BasicBlock::Create(M.getContext(),"entry", Wrapper);
+	BasicBlock* Cont = BasicBlock::Create(M.getContext(),"cont", Wrapper);
+	BasicBlock* Catch = BasicBlock::Create(M.getContext(),"catch", Wrapper);
+	IRBuilder<> Builder(Entry);
+
+	llvm::SmallVector<Value*, 4> params;
+	for(auto& arg: Wrapper->args())
+		params.push_back(&arg);
+	InvokeInst* ForwardInvoke = Builder.CreateInvoke(F, Cont, Catch, params);
+
+	GlobalVariable* Helper = getOrInsertHelperGlobal(M);
+
+	Builder.SetInsertPoint(Cont);
+	Value* Ret = ForwardInvoke->getType()->isVoidTy() ? nullptr : ForwardInvoke;
+	Builder.CreateStore(ConstantPointerNull::get(cast<PointerType>(Helper->getType()->getPointerElementType())), Helper);
+	Builder.CreateRet(Ret);
+
+	Builder.SetInsertPoint(Catch);
+	LandingPadInst* OldLP = IV.getUnwindDest()->getLandingPadInst();
+	LandingPadInst* LP = cast<LandingPadInst>(OldLP->clone());
+	Builder.Insert(LP);
+	Builder.CreateStore(LP, Helper);
+	Ret = ForwardInvoke->getType()->isVoidTy() ? nullptr : UndefValue::get(ForwardInvoke->getType());
+	Builder.CreateRet(Ret);
+
+	Builder.SetInsertPoint(&IV);
+	CallInst* Call = copyInvokeToCall(&IV);
+	Call->setCalledFunction(Wrapper);
+	IV.replaceAllUsesWith(Call);
+	Value* Ex = Builder.CreateLoad(Helper->getType()->getPointerElementType(), Helper);
+	Value* Cond = Builder.CreateICmpEQ(Ex, ConstantPointerNull::get(cast<PointerType>(Ex->getType())));
+	IV.getNormalDest()->removePredecessor(IV.getParent());
+	IV.getUnwindDest()->removePredecessor(IV.getParent());
+	Builder.CreateCondBr(Cond, IV.getNormalDest(), IV.getUnwindDest());
+
+	IV.eraseFromParent();
+
+	Builder.SetInsertPoint(OldLP);
+	Ex = Builder.CreateLoad(Helper->Value::getType()->getPointerElementType(), Helper);
+	OldLP->replaceAllUsesWith(Ex);
+	ToRemove.insert(OldLP);
+	// what about resume?
+
+	Wrapper->setSection("asmjs");
+
 
 	return Wrapper;
 }
@@ -145,6 +237,31 @@ void FFIWrapping::run()
 			outsideModule.insert(W);
 			return Builder.CreateCall(W);
 		}, insideModule);
+	}
+	DenseSet<Instruction*> ToRemove;
+	for (Function& F: make_early_inc_range(M.functions()))
+	{
+		if (F.getSection() != "asmjs")
+			continue;
+		for (auto& I: make_early_inc_range(instructions(F)))
+		{
+			if (!isa<InvokeInst>(I))
+				continue;
+			auto& IV = cast<InvokeInst>(I);
+			bool indirect = IV.isIndirectCall();
+			bool asmjs = indirect || IV.getCalledFunction()->getSection() == "asmjs";
+			Function* W = wrapInvoke(M, IV, ToRemove);
+			if (asmjs)
+			{
+				exports.insert(IV.getCalledFunction());
+			}
+			newImports.insert(W);
+			outsideModule.insert(W);
+		}
+	}
+	for (auto* I: ToRemove)
+	{
+		I->eraseFromParent();
 	}
 	imports = std::move(newImports);
 }

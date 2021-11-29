@@ -335,6 +335,8 @@ bool PointerAnalyzer::runOnModule(Module& M)
 		}
 	}
 
+	for(const Function & F : M)
+		dumpAllPointers(F, *this);
 	return false;
 }
 
@@ -1947,6 +1949,7 @@ void dumpAllPointers(const Function & F, const PointerAnalyzer & analyzer)
 			case REGULAR: llvm::errs() << "REGULAR"; break;
 			case SPLIT_REGULAR: llvm::errs() << "SPLIT_REGULAR"; break;
 			case BYTE_LAYOUT: llvm::errs() << "BYTE_LAYOUT"; break;
+			case RAW: llvm::errs() << "RAW"; break;
 			default:
 				assert(false && "Unexpected pointer kind");
 		}

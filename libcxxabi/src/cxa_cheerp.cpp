@@ -181,6 +181,27 @@ static Exception* find_exception_from_unwind_ptr(void* unwind)
 	return Exception::allocator.get_object(unwind);
 }
 
+// The following macros are used for defining ABI functions that return a void*
+// so that they work as intended both when compiled with the cheerp and the cheerp-wasm
+// target. For the cheerp-wasm target the wasm function is just a wrapper for a
+// genericjs function that extract the offset from the genericjs void*. Then it
+// casts it to a wasm void*. All of this is ok because we know the base of these
+// pointers is either the linear heap or the store of a IdAllocator.
+#ifdef __ASMJS__
+#define WASM_ADAPTER_VOID_PTR_DEF(fname, argty, arg) static int genericjs_##fname(argty arg) noexcept; \
+[[cheerp::wasm]] void* fname(argty arg) noexcept \
+{ \
+	int r = genericjs_##fname(arg); \
+	return reinterpret_cast<void*>(r); \
+} \
+static int genericjs_##fname(argty arg) noexcept
+
+#define WASM_ADAPTER_VOID_PTR_RET(x) __builtin_cheerp_pointer_offset(x)
+#else
+#define WASM_ADAPTER_VOID_PTR_DEF(fname, argty, arg) void* fname(argty arg) noexcept
+#define WASM_ADAPTER_VOID_PTR_RET(x) x
+#endif
+
 extern "C" {
 
 void __cxa_decrement_exception_refcount(void* obj) noexcept
@@ -221,8 +242,7 @@ __cxa_throw(void *thrown_object, std::type_info *tinfo, void (*dest)(void *)) {
 }
 
 __attribute((noinline))
-void*
-__cxa_begin_catch(void* unwind_arg) noexcept
+WASM_ADAPTER_VOID_PTR_DEF(__cxa_begin_catch, void*, unwind_arg)
 {
 	Exception* ex = find_exception_from_unwind_ptr(unwind_arg);
 	// Increment the handler count, removing the flag about being rethrown
@@ -236,14 +256,13 @@ __cxa_begin_catch(void* unwind_arg) noexcept
 		thrown_exceptions = ex;
 	}
 	uncaughtExceptions -= 1;
-	return ex->adjustedPtr;
+	return WASM_ADAPTER_VOID_PTR_RET(ex->adjustedPtr);
 }
 
 __attribute((noinline))
-void*
-__cxa_get_exception_ptr(void* unwind_arg) noexcept
+WASM_ADAPTER_VOID_PTR_DEF(__cxa_get_exception_ptr, void*, unwind_arg)
 {
-	return find_exception_from_unwind_ptr(unwind_arg)->adjustedPtr;
+	return WASM_ADAPTER_VOID_PTR_RET(find_exception_from_unwind_ptr(unwind_arg)->adjustedPtr);
 }
 
 __attribute((noinline))
@@ -293,15 +312,15 @@ void __cxa_rethrow() {
 	do_throw(ex);
 }
 
-void* __cxa_current_primary_exception() noexcept
+WASM_ADAPTER_VOID_PTR_DEF(__cxa_current_primary_exception, void, )
 {
 	Exception* ex = thrown_exceptions;
 	if(ex == nullptr)
-		return ex;
+		return WASM_ADAPTER_VOID_PTR_RET(ex);
 	if(ex->primary != nullptr)
 		ex = ex->primary;
 	__cxa_increment_exception_refcount(ex);
-	return ex;
+	return WASM_ADAPTER_VOID_PTR_RET(ex);
 }
 
 [[noreturn]]
@@ -388,7 +407,7 @@ __gxx_personality_v0
 	}
 
 	Exception* ex = current_exception;
-	lp = __cheerp_landingpad { ex, 0};
+	lp = __cheerp_landingpad { reinterpret_cast<void*>(WASM_ADAPTER_VOID_PTR_RET(ex)), 0};
 
 	for(int i = 0; i < n; i++)
 	{

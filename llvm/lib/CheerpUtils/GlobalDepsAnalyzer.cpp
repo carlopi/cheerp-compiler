@@ -1096,7 +1096,7 @@ bool GlobalDepsAnalyzer::runOnModule( llvm::Module & module )
 	// Create the FFI wrappers if needed
 	if (llcPass)
 	{
-		FFIWrapping FFIW(module, asmJSImportedFuncions, functionsInsideModule, functionsOutsideModule);
+		FFIWrapping FFIW(module, asmJSImportedFuncions, asmJSExportedFuncions, functionsInsideModule, functionsOutsideModule);
 		FFIW.run();
 	}
 	return true;

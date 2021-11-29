@@ -2441,7 +2441,7 @@ void CheerpWriter::compileConstant(const Constant* c, PARENT_PRIORITY parentPrio
 		}
 		assert(c->hasName());
 
-		if(asmjs && isa<Function>(c))
+		if(isa<Function>(c) && globalDeps.insideModule().count(cast<Function>(c)))
 		{
 			const Function* f = cast<Function>(c);
 			if (linearHelper.functionHasAddress(f)) {
@@ -3353,6 +3353,11 @@ void CheerpWriter::compilePointerAs(const llvm::Value* p, POINTER_KIND kind, PAR
 		}
 		case RAW:
 		{
+			p->dump();
+			if (auto* I = dyn_cast<Instruction>(p))
+			{
+				I->getParent()->getParent()->dump();
+			}
 			assert(valueKind != BYTE_LAYOUT);
 			assert(valueKind != COMPLETE_OBJECT);
 			if (valueKind == RAW)
@@ -5464,6 +5469,8 @@ void CheerpWriter::compileGlobal(const GlobalVariable& G)
 
 void CheerpWriter::compileGlobalAsmJS(const GlobalVariable& G)
 {
+	if(!G.hasName())
+		G.dump();
 	assert(G.hasName());
 	if (TypeSupport::isClientGlobal(&G) && !G.hasInitializer())
 	{
