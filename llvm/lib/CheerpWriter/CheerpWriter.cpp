@@ -1504,13 +1504,16 @@ void CheerpWriter::compileEqualPointersComparison(const llvm::Value* lhs, const 
 	POINTER_KIND lhsKind = PA.getPointerKind(lhs);
 	POINTER_KIND rhsKind = PA.getPointerKind(rhs);
 
+	errs()<<((int)lhsKind)<<" - ";lhs->dump();
+	errs()<<((int)rhsKind)<<" - ";rhs->dump();
 	if(lhsKind == RAW)
-		assert(rhsKind == RAW || rhsKind == CONSTANT);
+		assert(rhsKind != COMPLETE_OBJECT);
 	if(rhsKind == RAW)
-		assert(lhsKind == RAW || lhsKind == CONSTANT);
+		assert(lhsKind != COMPLETE_OBJECT);
 
 	bool asmjs = currentFun && currentFun->getSection() == "asmjs";
-	bool compareRaw = lhsKind == RAW || rhsKind == RAW || (lhsKind == CONSTANT && rhsKind == CONSTANT && asmjs);
+	bool compareRaw = ((lhsKind == RAW || lhsKind == CONSTANT) && (rhsKind == RAW || rhsKind == CONSTANT))
+		&& !(lhsKind == CONSTANT && rhsKind == CONSTANT && !asmjs);
 
 	if (compareRaw)
 		compareString = (p == CmpInst::ICMP_NE) ? "!=" : "==";
@@ -1530,20 +1533,41 @@ void CheerpWriter::compileEqualPointersComparison(const llvm::Value* lhs, const 
 	// NOTE: For any pointer-to-immutable, converting to CO is actually a dereference. (base[offset] in both cases)
 	//       PA enforces that comparisons between pointers-to-immutable (which include pointers-to-pointers)
 	//       need a SPLIT_REGULAR kind. Make sure to also use SPLIT_REGULAR if one kind is CONSTANT (e.g. null)
-	else if((lhsKind == REGULAR || lhsKind == SPLIT_REGULAR || lhsKind == CONSTANT || (isGEP(lhs) && cast<User>(lhs)->getNumOperands()==2)) &&
-		(rhsKind == REGULAR || rhsKind == SPLIT_REGULAR || rhsKind == CONSTANT || (isGEP(rhs) && cast<User>(rhs)->getNumOperands()==2)))
+	else if((lhsKind == REGULAR || lhsKind == SPLIT_REGULAR || lhsKind == RAW ||lhsKind == CONSTANT || (isGEP(lhs) && cast<User>(lhs)->getNumOperands()==2)) &&
+		(rhsKind == REGULAR || rhsKind == SPLIT_REGULAR || rhsKind == RAW ||rhsKind == CONSTANT || (isGEP(rhs) && cast<User>(rhs)->getNumOperands()==2)))
 	{
 		assert(lhsKind != COMPLETE_OBJECT || !isa<Instruction>(lhs) ||
 				isInlineable(*cast<Instruction>(lhs), PA));
 		assert(rhsKind != COMPLETE_OBJECT || !isa<Instruction>(rhs) ||
 				isInlineable(*cast<Instruction>(rhs), PA));
+		bool forRAW = lhsKind == RAW || rhsKind == RAW;
 		compilePointerBase(lhs);
 		stream << compareString;
 		compilePointerBase(rhs);
 		stream << joinString;
-		compilePointerOffset(lhs, COMPARISON);
+		if (lhsKind == RAW)
+		{
+			compileRawPointer(lhs);
+		}
+		else
+		{
+			PARENT_PRIORITY prio = forRAW ? SHIFT : COMPARISON;
+			compilePointerOffset(lhs, prio);
+			if (forRAW)
+				stream << "<<" << getHeapShiftForType(rhs->getType()->getPointerElementType());
+		}
 		stream << compareString;
-		compilePointerOffset(rhs, COMPARISON);
+		if (rhsKind == RAW)
+		{
+			compileRawPointer(rhs);
+		}
+		else
+		{
+			PARENT_PRIORITY prio = forRAW ? SHIFT : COMPARISON;
+			compilePointerOffset(rhs, prio);
+			if (forRAW)
+				stream << "<<" << getHeapShiftForType(rhs->getType()->getPointerElementType());
+		}
 	}
 	else if(lhsKind == BYTE_LAYOUT || rhsKind == BYTE_LAYOUT)
 	{
@@ -2037,7 +2061,15 @@ void CheerpWriter::compilePointerOffset(const Value* p, PARENT_PRIORITY parentPr
 	// null must be handled first, even if it is bytelayout
 	else if(kind == CONSTANT || isa<UndefValue>(p))
 	{
-		stream << '0';
+		if (const IntToPtrInst* ITP = dyn_cast<IntToPtrInst>(p))
+		{
+			ConstantInt* CI = cast<ConstantInt>(ITP->getOperand(0));
+			stream << CI->getSExtValue();
+		}
+		else
+		{
+			stream << '0';
+		}
 	}
 	// byteLayout must be handled second, otherwise we may print a constant offset without the required byte multiplier
 	else if ( byteLayout && !forEscapingPointer)
