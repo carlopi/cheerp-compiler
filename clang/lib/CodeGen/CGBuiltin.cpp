@@ -12294,7 +12294,10 @@ Value *CodeGenFunction::EmitCheerpBuiltinExpr(unsigned BuiltinID,
 
     Function *reallocFunc = CGM.getIntrinsic(Intrinsic::cheerp_reallocate, Tys);
     if(asmjs) {
-      return Builder.CreateCall(reallocFunc, Ops);
+      CallBase* CB = Builder.CreateCall(reallocFunc, Ops);
+      assert(Tys[0]->getPointerElementType() == ConvertType(reallocType->getPointeeType()));
+      CB->addParamAttr(0, llvm::Attribute::get(CB->getContext(), llvm::Attribute::ElementType, ConvertType(reallocType->getPointeeType())));
+      return CB;
     } else {
       // realloc needs to behave like malloc if the operand is null
       llvm::Value* opIsNull = Builder.CreateIsNull(Ops[0]);
@@ -12308,7 +12311,9 @@ Value *CodeGenFunction::EmitCheerpBuiltinExpr(unsigned BuiltinID,
       llvm::Value* mallocRet = Builder.CreateCall(mallocFunc, Ops[1]);
       Builder.CreateBr(endBlock);
       Builder.SetInsertPoint(reallocBlock);
-      llvm::Value* reallocRet = Builder.CreateCall(reallocFunc, Ops);
+      llvm::CallBase* reallocRet = cast<CallBase>(Builder.CreateCall(reallocFunc, Ops));
+      assert(Tys[0]->getPointerElementType() == ConvertType(reallocType->getPointeeType()));
+      reallocRet->addParamAttr(0, llvm::Attribute::get(reallocRet->getContext(), llvm::Attribute::ElementType, ConvertType(reallocType->getPointeeType())));
       Builder.CreateBr(endBlock);
       Builder.SetInsertPoint(endBlock);
       llvm::PHINode* Result = Builder.CreatePHI(Tys[0], 2);
