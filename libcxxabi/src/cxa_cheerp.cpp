@@ -72,7 +72,7 @@ template<typename T>
 class IdAllocator
 {
 	T* store;
-	bool* slots;
+	char* slots;
 	int len;
 
 	int find_free_id()
@@ -87,13 +87,14 @@ class IdAllocator
 		{
 			len = len*2;
 			store = static_cast<T*>(realloc(store, len));
-			slots = static_cast<bool*>(realloc(slots, len));
+			slots = static_cast<char*>(realloc(slots, len));
 		}
 		return id;
 	};
 public:
-	IdAllocator(): slots(new bool[16]), len(16)
+	IdAllocator(): len(16)
 	{
+		slots = static_cast<char*>(malloc(16*sizeof(char)));
 		store = static_cast<T*>(malloc(16*sizeof(T)));
 	}
 	template<typename... Args>
@@ -101,14 +102,14 @@ public:
 	{
 		int id = find_free_id();
 		T* ret = new(&store[id]) T(cheerp::forward<Args>(args)...);
-		slots[id] = true;
+		slots[id] = 1;
 		return ret;
 	}
 	void deallocate(T* t)
 	{
 		int id = get_id(t);
 		store[id].~T();
-		slots[id] = false;
+		slots[id] = 0;
 	}
 	int get_id(T* t)
 	{
