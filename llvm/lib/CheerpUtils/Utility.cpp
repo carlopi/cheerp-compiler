@@ -928,19 +928,8 @@ const Value * DynamicAllocInfo::getByteSizeArg() const
 {
 	assert( isValidAlloc() );
 
-	if ( calloc == type )
-	{
-		assert( call->arg_size() == 2 );
-		return call->getOperand(1);
-	}
-	else if ( cheerp_reallocate == type )
-	{
-		assert( call->arg_size() == 2 );
-		return call->getOperand(1);
-	}
-
-	assert( call->arg_size() == 1 );
-	return call->getOperand(0);
+	assert( call->arg_size() == 2 );
+	return call->getOperand(1);
 }
 
 const Value * DynamicAllocInfo::getNumberOfElementsArg() const
