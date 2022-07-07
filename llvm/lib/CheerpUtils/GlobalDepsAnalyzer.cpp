@@ -250,6 +250,7 @@ bool GlobalDepsAnalyzer::runOnModule( llvm::Module & module )
 								Instruction* newCast = new BitCastInst(ci->getOperand(0), newType, "", ci);
 								ci->setOperand(0, newCast);
 							}
+							ci->removeParamAttr(0, llvm::Attribute::ElementType);
 						}
 					}
 
