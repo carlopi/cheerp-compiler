@@ -182,7 +182,6 @@ bool CheerpNativeRewriterPass::rewriteIfNativeConstructorCall(Module& M, Instruc
 
 	//We optimize the special case of String(String), removing the constructor
 	//call entirely
-	assert(isBuiltinConstructorForType(cast<CallBase>(callInst)->getCalledFunction()->getName().data(), "class._ZN6client6StringE") == redundantStringConstructor(callInst, initialArgs));
 	if (redundantStringConstructor(callInst, initialArgs))
 	{
 		new StoreInst(initialArgs[0], newI, callInst);
