@@ -12339,7 +12339,9 @@ Value *CodeGenFunction::EmitCheerpBuiltinExpr(unsigned BuiltinID,
       }
     }
     Function *F = CGM.getIntrinsic(Intrinsic::cheerp_deallocate, {origType});
-    return Builder.CreateCall(F, origArg);
+    CallBase* CB = Builder.CreateCall(F, origArg);
+    CB->addParamAttr(0, llvm::Attribute::get(CB->getContext(), llvm::Attribute::ElementType, origType->getPointerElementType()));
+    return CB;
   }
   return 0;
 }

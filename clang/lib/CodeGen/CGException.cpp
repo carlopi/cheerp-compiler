@@ -391,7 +391,8 @@ namespace {
     llvm::Value *exn;
     FreeException(llvm::Value *exn) : exn(exn) {}
     void Emit(CodeGenFunction &CGF, Flags flags) override {
-      CGF.EmitNounwindRuntimeCall(getFreeExceptionFn(CGF.CGM, exn->getType()), exn);
+      llvm::CallBase* CB = CGF.EmitNounwindRuntimeCall(getFreeExceptionFn(CGF.CGM, exn->getType()), exn);
+      CB->addParamAttr(0, llvm::Attribute::get(CB->getContext(), llvm::Attribute::ElementType, exn->getType()->getPointerElementType()));
     }
   };
 } // end anonymous namespace

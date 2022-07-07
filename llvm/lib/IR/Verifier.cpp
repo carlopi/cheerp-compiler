@@ -3205,6 +3205,7 @@ void Verifier::visitCallBase(CallBase &Call) {
         case Intrinsic::cheerp_downcast:
         case Intrinsic::cheerp_allocate:
         case Intrinsic::cheerp_allocate_array:
+        case Intrinsic::cheerp_deallocate:
         case Intrinsic::cheerp_reallocate:
           Assert(Attrs.hasParamAttr(0, Attribute::ElementType), "Cheerp Intrinsic should specify element type", Call);
 	  break;

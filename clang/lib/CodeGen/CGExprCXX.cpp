@@ -1387,6 +1387,7 @@ static RValue EmitNewDeleteCall(CodeGenFunction &CGF,
       Arg[0] = CGF.Builder.CreateBitCast(Arg[0], types[0]);
     }
     CallOrInvoke = CGF.Builder.CreateCall(cast<llvm::FunctionType>(CalleeAddr->getValueType()), CalleeAddr, Arg);
+    CallOrInvoke->addParamAttr(0, llvm::Attribute::get(CallOrInvoke->getContext(), llvm::Attribute::ElementType, Arg[0]->getType()->getPointerElementType()));
     RV = RValue::get(CallOrInvoke);
   }
   else
