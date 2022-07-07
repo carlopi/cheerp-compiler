@@ -674,9 +674,7 @@ bool FreeAndDeleteRemoval::runOnModule(Module& M)
 					bool asmjs = call->getParent()->getParent()->getSection()==StringRef("asmjs");
 					if (asmjs)
 						continue;
-					Type* ty = call->getOperand(0)->getType();
-					assert(isa<PointerType>(ty));
-					Type* elemTy = cast<PointerType>(ty)->getPointerElementType();
+					Type* elemTy = call->getParamElementType(0);
 					if (isAllGenericJS || (!cheerp::TypeSupport::isAsmJSPointed(elemTy) && elemTy->isAggregateType()))
 					{
 						deleteInstructionAndUnusedOperands(call);

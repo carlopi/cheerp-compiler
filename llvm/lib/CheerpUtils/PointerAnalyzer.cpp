@@ -900,7 +900,7 @@ PointerKindWrapper& PointerUsageVisitor::visitUse(PointerKindWrapper& ret, const
 				llvm::report_fatal_error("Unreachable code in cheerp::PointerAnalyzer::visitUse, cheerp_create_closure");
 		case Intrinsic::cheerp_deallocate:
 		{
-			if (TypeSupport::isTypedArrayType(U->get()->getType()->getPointerElementType(), true))
+			if (TypeSupport::isTypedArrayType(intrinsic->getParamElementType(0), true))
 			{
 				return ret |= PointerKindWrapper(SPLIT_REGULAR, p);
 			}

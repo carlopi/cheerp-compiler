@@ -1230,7 +1230,7 @@ void GlobalDepsAnalyzer::visitFunction(const Function* F, VisitedSet& visited)
 				{
 					Type* ty = ci.getOperand(0)->getType();
 					bool basicType = !ty->isAggregateType();
-					bool asmjsPtr = TypeSupport::isAsmJSPointer(ty);
+					bool asmjsPtr = TypeSupport::isAsmJSPointed(ci.getParamElementType(0));
 					if (isAsmJS || basicType || asmjsPtr)
 					{
 						// Delay adding free, it will be done only if asm.js malloc is actually there
