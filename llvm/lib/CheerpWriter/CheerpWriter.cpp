@@ -1019,7 +1019,7 @@ CheerpWriter::COMPILE_INSTRUCTION_FEEDBACK CheerpWriter::handleBuiltinCall(const
 	}
 	else if(cheerp::isFreeFunctionName(ident) || intrinsicId==Intrinsic::cheerp_deallocate)
 	{
-		if (asmjs || TypeSupport::isAsmJSPointer((*it)->getType()))
+		if (asmjs || cheerp::isFreeFunctionName(ident) || TypeSupport::isAsmJSPointed(callV.getParamElementType(0)))
 		{
 			Function* ffree = module.getFunction("free");
 			if (!ffree)
