@@ -150,11 +150,10 @@ static bool redundantStringConstructor(Instruction* ci, SmallVectorImpl<Value*>&
 {
 	if (initialArgs.size() != 1)
 		return false;
-	Type* ty = ci->getOperand(0)->getType();
+	PointerType* ty = dyn_cast<PointerType>(ci->getOperand(0)->getType());
 	Type* argTy = initialArgs[0]->getType();
-	if (!argTy->isPointerTy() || !argTy->getPointerElementType()->isStructTy())
-		return false;
-	if (ty == argTy && ty->getPointerElementType()->getStructName() == StringRef("class._ZN6client6StringE"))
+	Type* StringType = StructType::getTypeByName(ci->getContext(), "class._ZN6client6StringE");
+	if (ty && ty == argTy && ty == StringType->getPointerTo(ty->getAddressSpace()))
 		return true;
 	return false;
 }
