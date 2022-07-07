@@ -336,7 +336,7 @@ private:
 
 	uint32_t compileArraySize(const DynamicAllocInfo& info, bool shouldPrint, bool isBytes = false);
 	void compileAllocation(const DynamicAllocInfo& info);
-	COMPILE_INSTRUCTION_FEEDBACK compileFree(const llvm::Value* obj);
+	COMPILE_INSTRUCTION_FEEDBACK compileFree(const llvm::Value* obj, llvm::Type* elementType);
 
 	/** @} */
 
