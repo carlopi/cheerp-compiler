@@ -79,6 +79,7 @@ bool AllocaLowering::runOnFunction(Function& F, DominatorTree& DT, cheerp::Globa
 	SmallVector<ReturnInst*, 8> returns;
 	SmallVector<CallInst*, 8> vastarts;
 	SmallVector<CallInst*, 8> varargCalls;
+	Type* Int8Ty = IntegerType::getInt8Ty(M->getContext());
 
 	uint32_t nbytes = 0;
 	for ( BasicBlock & BB : F )
@@ -183,7 +184,8 @@ bool AllocaLowering::runOnFunction(Function& F, DominatorTree& DT, cheerp::Globa
 	if (needFrame)
 	{
 		savedStack = Builder.CreateCall(getStack, {}, "savedStack");
-		newStack = Builder.CreateGEP(savedStack->getType()->getScalarType()->getPointerElementType(), savedStack, ConstantInt::get(int32Ty, -nbytes, true));
+		assertPointerElementOrOpaque(savedStack->getType(), Int8Ty);
+		newStack = Builder.CreateGEP(Int8Ty, savedStack, ConstantInt::get(int32Ty, -nbytes, true));
 		Builder.CreateCall(setStack, newStack);
 	}
 
@@ -194,7 +196,8 @@ bool AllocaLowering::runOnFunction(Function& F, DominatorTree& DT, cheerp::Globa
 
 		Constant* offset = ConstantInt::get(int32Ty, nbytes + a.second, true);
 		IRBuilder<> Builder(a.first);
-		Value* gep = Builder.CreateGEP(newStack->getType()->getScalarType()->getPointerElementType(), newStack, offset);
+		assertPointerElementOrOpaque(newStack->getType(), Int8Ty);
+		Value* gep = Builder.CreateGEP(Int8Ty, newStack, offset);
 		gep  = Builder.CreateBitCast(gep, a.first->getType());
 		ReplaceInstWithValue(a.first->getParent()->getInstList(), ii, gep);
 
@@ -264,7 +267,8 @@ bool AllocaLowering::runOnFunction(Function& F, DominatorTree& DT, cheerp::Globa
 		Value* stackPtr = Builder.CreateCall(getStack, {});
 		// Each argument pushed is 8 bytes in size
 		Constant* pushOffset = ConstantInt::get(int32Ty, -varargParamNum*8, false);
-		Value* pushedStackPtr = Builder.CreateGEP(stackPtr->getType()->getScalarType()->getPointerElementType(), stackPtr, pushOffset);
+		assertPointerElementOrOpaque(stackPtr->getType()->getScalarType(), Int8Ty);
+		Value* pushedStackPtr = Builder.CreateGEP(Int8Ty, stackPtr, pushOffset);
 		Builder.CreateCall(setStack, pushedStackPtr);
 		// Calling convention for variadic arguments in asm.js mode:
 		// arguments are pushed into the stack in the reverse order
@@ -274,7 +278,8 @@ bool AllocaLowering::runOnFunction(Function& F, DominatorTree& DT, cheerp::Globa
 		{
 			i++;
 			Constant* offset = ConstantInt::get(int32Ty, -i*8, true);
-			Value* loc = Builder.CreateGEP(stackPtr->getType()->getScalarType()->getPointerElementType(), stackPtr, offset);
+			assertPointerElementOrOpaque(stackPtr->getType(), Int8Ty);
+			Value* loc = Builder.CreateGEP(Int8Ty, stackPtr, offset);
 			loc = Builder.CreateBitCast(loc, op->get()->getType()->getPointerTo(0));
 			Builder.CreateStore(op->get(), loc);
 		}
