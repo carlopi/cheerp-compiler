@@ -1852,10 +1852,10 @@ void CheerpWriter::compilePointerBaseTyped(const Value* p, Type* elementType, bo
 	POINTER_KIND kind = PA.getPointerKind(p);
 	if(kind == RAW)
 	{
-		assert(isa<PointerType>(p->getType()));
-		Type* ty = llvm::cast<PointerType>(p->getType())->getPointerElementType();
+		PointerType* ptrTy = cast<PointerType>(p->getType());
+		assert(ptrTy == elementType->getPointerTo(ptrTy->getAddressSpace()));
 		if (globalDeps.needAsmJSMemory()||globalDeps.needAsmJSCode())
-			compileHeapForType(ty);
+			compileHeapForType(elementType);
 		else
 			stream << "nullArray";
 		return;
@@ -1876,12 +1876,13 @@ void CheerpWriter::compilePointerBaseTyped(const Value* p, Type* elementType, bo
 
 	if(kind == CONSTANT)
 	{
-		Type* ty = llvm::cast<PointerType>(p->getType())->getPointerElementType();
+		PointerType* ptrTy = cast<PointerType>(p->getType());
+		assert(ptrTy == elementType->getPointerTo(ptrTy->getAddressSpace()));
 		if (isa<ConstantPointerNull>(p))
 			stream << "nullArray";
-		else if ((globalDeps.needAsmJSMemory() || globalDeps.needAsmJSCode()) && !ty->isStructTy())
+		else if ((globalDeps.needAsmJSMemory() || globalDeps.needAsmJSCode()) && !elementType->isStructTy())
 		{
-			compileHeapForType(ty);
+			compileHeapForType(elementType);
 		}
 		else
 			stream << "nullArray";
