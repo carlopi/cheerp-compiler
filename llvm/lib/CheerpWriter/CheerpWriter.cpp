@@ -1849,11 +1849,12 @@ void CheerpWriter::compilePointerBase(const Value* p, bool forEscapingPointer)
 
 void CheerpWriter::compilePointerBaseTyped(const Value* p, Type* elementType, bool forEscapingPointer)
 {
+	PointerType* ptrTy = cast<PointerType>(p->getType());
+	assert(ptrTy == elementType->getPointerTo(ptrTy->getAddressSpace()));
+
 	POINTER_KIND kind = PA.getPointerKind(p);
 	if(kind == RAW)
 	{
-		PointerType* ptrTy = cast<PointerType>(p->getType());
-		assert(ptrTy == elementType->getPointerTo(ptrTy->getAddressSpace()));
 		if (globalDeps.needAsmJSMemory()||globalDeps.needAsmJSCode())
 			compileHeapForType(elementType);
 		else
@@ -1876,8 +1877,6 @@ void CheerpWriter::compilePointerBaseTyped(const Value* p, Type* elementType, bo
 
 	if(kind == CONSTANT)
 	{
-		PointerType* ptrTy = cast<PointerType>(p->getType());
-		assert(ptrTy == elementType->getPointerTo(ptrTy->getAddressSpace()));
 		if (isa<ConstantPointerNull>(p))
 			stream << "nullArray";
 		else if ((globalDeps.needAsmJSMemory() || globalDeps.needAsmJSCode()) && !elementType->isStructTy())
