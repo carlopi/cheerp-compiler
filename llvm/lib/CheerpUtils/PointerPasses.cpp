@@ -217,7 +217,7 @@ public:
 	}
 	bool visitPHI(PHINode* phi);
 	Value* findBase(Instruction* I);
-	Value* rewrite(Instruction* I, Value* base);
+	Value* rewrite(Instruction* I, Value* base, Type* elementType);
 private:
 	std::set<Value*> visited;
 	PHIMap& mappedPHIs;
@@ -279,7 +279,7 @@ Value* PHIVisitor::findBase(Instruction* I)
 	return I;
 }
 
-Value* PHIVisitor::rewrite(Instruction* I, Value* base)
+Value* PHIVisitor::rewrite(Instruction* I, Value* base, Type* elementType)
 {
 	if (I==base)
 		return NULL;
@@ -289,7 +289,7 @@ Value* PHIVisitor::rewrite(Instruction* I, Value* base)
 		{
 			Value* ptr=gep->getPointerOperand();
 			Instruction* ptrI=dyn_cast<Instruction>(ptr);
-			Value* parentOffset = ptrI ? rewrite(ptrI, base) : NULL;
+			Value* parentOffset = ptrI ? rewrite(ptrI, base, elementType) : NULL;
 			Value* thisOffset = *gep->idx_begin();
 			if (parentOffset == NULL)
 				return thisOffset;
@@ -319,7 +319,7 @@ Value* PHIVisitor::rewrite(Instruction* I, Value* base)
 			Value* incomingValue=phi->getIncomingValue(i);
 			phi->setIncomingValue(i, UndefValue::get(phi->getType()));
 			Instruction* incomingInst=dyn_cast<Instruction>(incomingValue);
-			Value* index = incomingInst ? rewrite(incomingInst, base) : NULL;
+			Value* index = incomingInst ? rewrite(incomingInst, base, elementType) : NULL;
 			if (index == NULL)
 				index = ConstantInt::get(newPHI->getType(), 0);
 			newPHI->addIncoming(index, phi->getIncomingBlock(i));
@@ -335,7 +335,7 @@ Value* PHIVisitor::rewrite(Instruction* I, Value* base)
 		if(isa<ConstantInt>(newOffset) && cast<ConstantInt>(newOffset)->getZExtValue()==0)
 			newGep=base;
 		else
-			newGep=GetElementPtrInst::Create(base->getType()->getPointerElementType(), base, newOffset, "geptoindex",&*phi->getParent()->getFirstInsertionPt());
+			newGep=GetElementPtrInst::Create(elementType, base, newOffset, "geptoindex",&*phi->getParent()->getFirstInsertionPt());
 		phi->replaceAllUsesWith(newGep);
 		return newOffset;
 	}
@@ -349,7 +349,7 @@ bool PHIVisitor::visitPHI(PHINode* phi)
 		return false;
 	// We have found a common base for all incoming values.
 	// Now we want to build an integer PHI
-	rewrite(phi, base);
+	rewrite(phi, base, base->getType()->getPointerElementType());
 	return true;
 }
 
