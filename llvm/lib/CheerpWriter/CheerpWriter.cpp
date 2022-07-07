@@ -5467,7 +5467,7 @@ void CheerpWriter::compileGlobal(const GlobalVariable& G)
 			{
 				POINTER_KIND storedKind = PA.getPointerKindForStoredType(C->getType());
 				if(storedKind == REGULAR && PA.getConstantOffsetForPointer(&G))
-					compilePointerBaseTyped(C, G->getValueType());
+					compilePointerBaseTyped(C, G.getValueType());
 				else
 					compilePointerAs(C, storedKind);
 			}
