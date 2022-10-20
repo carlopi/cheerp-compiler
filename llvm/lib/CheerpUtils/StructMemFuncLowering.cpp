@@ -22,7 +22,7 @@ using namespace llvm;
 
 const unsigned INLINE_WRITE_LOOP_MAX = 128;
 
-void StructMemFuncLowering::createMemFunc(IRBuilder<>* IRB, Value* baseDst, Value* baseSrc, Type* containingType, size_t size,
+void StructMemFuncLowering::createMemFunc(IRBuilder<NoFolder>* IRB, Value* baseDst, Value* baseSrc, Type* containingType, size_t size,
 						SmallVector<Value*, 8>& indexes)
 {
 	Value* src = IRB->CreateGEP(containingType, baseSrc, indexes);
@@ -32,7 +32,7 @@ void StructMemFuncLowering::createMemFunc(IRBuilder<>* IRB, Value* baseDst, Valu
 	IRB->CreateMemCpy(dst, MaybeAlign(), src, MaybeAlign(), size, false, NULL, NULL, NULL, NULL, llvm::IRBuilderBase::CheerpTypeInfo(cast<GetElementPtrInst>(src)->getResultElementType()));
 }
 
-void StructMemFuncLowering::recursiveCopy(IRBuilder<>* IRB, Value* baseDst, Value* baseSrc, Type* curType, Type* containingType,
+void StructMemFuncLowering::recursiveCopy(IRBuilder<NoFolder>* IRB, Value* baseDst, Value* baseSrc, Type* curType, Type* containingType,
 						Type* indexType, uint32_t baseAlign, SmallVector<Value*, 8>& indexes)
 {
 	// For aggregates we push a new index and overwrite it for each element
@@ -101,6 +101,7 @@ void StructMemFuncLowering::recursiveCopy(IRBuilder<>* IRB, Value* baseDst, Valu
 			assert(baseSrc->getType() == baseDst->getType());
 			elementSrc = IRB->CreateGEP(containingType, baseSrc, indexes);
 			elementDst = IRB->CreateGEP(containingType, baseDst, indexes);
+			llvm::errs() << *elementDst << "\n";
 			loadType = cast<GEPOperator>(elementDst)->getResultElementType();
 		}
 		assert(loadType->getPointerTo() == elementSrc->getType());
@@ -109,7 +110,7 @@ void StructMemFuncLowering::recursiveCopy(IRBuilder<>* IRB, Value* baseDst, Valu
 	}
 }
 
-void StructMemFuncLowering::recursiveReset(IRBuilder<>* IRB, Value* baseDst, Value* resetVal, Type* curType, Type* containingType,
+void StructMemFuncLowering::recursiveReset(IRBuilder<NoFolder>* IRB, Value* baseDst, Value* resetVal, Type* curType, Type* containingType,
 						Type* indexType, uint32_t baseAlign, SmallVector<Value*, 8>& indexes)
 {
 	// For aggregates we push a new index and overwrite it for each element
@@ -217,7 +218,7 @@ void StructMemFuncLowering::recursiveReset(IRBuilder<>* IRB, Value* baseDst, Val
 
 // Create a generalized loop, the index is either incremented until elementsCount is reached
 // or decremented from elementsCount-1 to 0. IRB already inserts inside currentBlock.
-void StructMemFuncLowering::createGenericLoop(IRBuilder<>* IRB, BasicBlock* previousBlock, BasicBlock* endBlock, BasicBlock* currentBlock,
+void StructMemFuncLowering::createGenericLoop(IRBuilder<NoFolder>* IRB, BasicBlock* previousBlock, BasicBlock* endBlock, BasicBlock* currentBlock,
 						Type* pointedType, Value* dst, Value* src, Value* elementsCount, MODE mode, uint32_t baseAlign, const bool isForward)
 {
 	Type* int32Type = IntegerType::get(previousBlock->getContext(), 32);
@@ -298,14 +299,14 @@ void StructMemFuncLowering::createGenericLoop(IRBuilder<>* IRB, BasicBlock* prev
 }
 
 // Create a forward loop, the index is incremented until elementsCount is reached. IRB already inserts inside currentBlock.
-void StructMemFuncLowering::createForwardLoop(IRBuilder<>* IRB, BasicBlock* previousBlock, BasicBlock* endBlock, BasicBlock* currentBlock,
+void StructMemFuncLowering::createForwardLoop(IRBuilder<NoFolder>* IRB, BasicBlock* previousBlock, BasicBlock* endBlock, BasicBlock* currentBlock,
 						Type* pointedType, Value* dst, Value* src, Value* elementsCount, MODE mode, uint32_t baseAlign)
 {
 	createGenericLoop(IRB, previousBlock, endBlock, currentBlock, pointedType, dst, src, elementsCount, mode, baseAlign, /*isForward*/true);
 }
 
 // Create a backward loop, the index is increment from elementsCount-1 to 0. IRB already inserts inside currentBlock.
-void StructMemFuncLowering::createBackwardLoop(IRBuilder<>* IRB, BasicBlock* previousBlock, BasicBlock* endBlock, BasicBlock* currentBlock,
+void StructMemFuncLowering::createBackwardLoop(IRBuilder<NoFolder>* IRB, BasicBlock* previousBlock, BasicBlock* endBlock, BasicBlock* currentBlock,
 						Type* pointedType, Value* dst, Value* src, Value* elementsCount, uint32_t baseAlign)
 {
 	createGenericLoop(IRB, previousBlock, endBlock, currentBlock, pointedType, dst, src, elementsCount, MODE::MEMMOVE, baseAlign, /*isForward*/false);
@@ -315,7 +316,7 @@ bool StructMemFuncLowering::createLoops(llvm::BasicBlock& BB, llvm::BasicBlock* 
 {
 	assert(dst->getType() == src->getType() || mode==MEMSET);
 	uint32_t byteSize = DL->getTypeAllocSize(pointedType);
-	IRBuilder<> IRB(&BB);
+	IRBuilder<NoFolder> IRB(&BB);
 	Value* fixedSize = IRB.CreateZExtOrTrunc(size, int32Type);
 	Value* elementsCount=IRB.CreateUDiv(fixedSize, ConstantInt::get(int32Type, byteSize));
 	Value* countIsZero=IRB.CreateICmp(CmpInst::ICMP_EQ, elementsCount, ConstantInt::get(int32Type, 0));
@@ -435,14 +436,14 @@ bool StructMemFuncLowering::runOnBlock(BasicBlock& BB, bool asmjs)
 					// The elem size is the whole array size, there may be an extra tail
 					elemSize = sizeInt - (sizeInt % elemSize);
 				}
-				IRBuilder<> IRB(CI);
+				IRBuilder<NoFolder> IRB(CI);
 				dst = IRB.CreateBitCast(dst, pointedType->getPointerTo());
 				// In MEMSET mode src is the i8 value to write
 				if(mode != MEMSET)
 					src = IRB.CreateBitCast(src, pointedType->getPointerTo());
 				// We have found a good alignment above, check if we need to split the intrinsic to deal with an unaligned tail
 				if(uint32_t tailSize = sizeInt % elemSize) {
-					IRBuilder<> IRB(CI->getNextNode());
+					IRBuilder<NoFolder> IRB(CI->getNextNode());
 					uint32_t skipCount = sizeInt / elemSize;
 					llvm::Value* tailDst = IRB.CreateGEP(pointedType, dst, ConstantInt::get(int32Type, skipCount));
 					llvm::Value* tailSrc = src;
