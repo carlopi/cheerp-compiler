@@ -6114,6 +6114,20 @@ void CodeGenModule::EmitTopLevelDecl(Decl *D) {
     for (auto *I : CRD->decls())
       if (isa<VarDecl>(I) || isa<CXXRecordDecl>(I))
         EmitTopLevelDecl(I);
+    // Add special JsExported delete/new as deferred
+    if (CRD->hasAttr<JsExportAttr>()) {
+      for (auto *I : CRD->decls()) {
+        if (!I->hasAttr<JsExportAttr>())
+          continue;
+	if (CXXMethodDecl* method = dyn_cast<CXXMethodDecl>(I)) {
+          if (!isa<CXXConstructorDecl>(I) && !isa<CXXDestructorDecl>(I)) {
+            auto name = method->getName();
+            if (name == "delete" || name == "new")
+	      EmitTopLevelDecl(I);
+          }
+        }
+      }
+    }
     break;
   }
     // No code generation needed.
