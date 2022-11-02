@@ -3019,7 +3019,7 @@ CheerpWriter::COMPILE_INSTRUCTION_FEEDBACK CheerpWriter::compileTerminatorInstru
 		case Instruction::Switch:
 			return COMPILE_EMPTY;
 		case Instruction::Unreachable:
-			stream << ";" << NewLine;
+			stream << "UNREACHABLE();" << NewLine;
 			return COMPILE_EMPTY;
 		default:
 			stream << "alert('Unsupported code');" << NewLine;

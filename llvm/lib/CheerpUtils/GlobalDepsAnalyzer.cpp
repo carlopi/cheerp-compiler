@@ -675,6 +675,17 @@ bool GlobalDepsAnalyzer::runOnModule( llvm::Module & module )
 		return true;
 	};
 
+
+	if (llcPass)
+	for (Function& F : module)
+	{
+		if (isSingleUnreachable(F))
+		{
+			markAsReachableIfPresent(&F);
+			F.setLinkage(GlobalValue::ExternalLinkage);
+		}
+	}
+
 	std::vector<Function*> toUnreachable;
 	std::unordered_map<FunctionType*, IndirectFunctionsData, LinearMemoryHelper::FunctionSignatureHash<true>, LinearMemoryHelper::FunctionSignatureCmp<true>> validIndirectCallTypesMap;
 	std::unordered_set<FunctionType*, LinearMemoryHelper::FunctionSignatureHash<true>, LinearMemoryHelper::FunctionSignatureCmp<true>> validTargetOfIndirectCall;
@@ -684,7 +695,7 @@ bool GlobalDepsAnalyzer::runOnModule( llvm::Module & module )
 			continue;
 
 		//If a given function is composed only of unreachable instructions, it can be excluded from consideration as possible call_indirect target
-		if (isSingleUnreachable(F))
+		if (!llcPass && isSingleUnreachable(F))
 			continue;
 
 		// Similar logic to hasAddressTaken, but we also need to find out if there is any direct use
@@ -1476,6 +1487,10 @@ int GlobalDepsAnalyzer::filterModule( const DenseSet<const Function*>& droppedMa
 			// Special case "free" here, it might be used in genericjs code and lowered by the backend
 			f->getName() != "free")
 		{
+		//	f->deleteBody();
+			llvm::BasicBlock* unreachableBlock = llvm::BasicBlock::Create(f->getContext(), "", f);
+			new llvm::UnreachableInst(unreachableBlock->getContext(), unreachableBlock);
+			llvm::errs() << *f << "\n";
 			logUndefinedSymbol(f);
 		}
 	}
