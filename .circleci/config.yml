@@ -33,13 +33,12 @@ jobs:
       - run:
           name: Clone Cheerp
           command: |
-            git clone https://github.com/leaningtech/cheerp-compiler.git
-            cd cheerp-compiler
             if [ << pipeline.parameters.release-tag >> != 'master' ]; then
-              git checkout << pipeline.parameters.release-tag >>
+              git clone https://github.com/leaningtech/cheerp-compiler.git --branch << pipeline.parameters.release-tag >> --depth 1
             else
-              git checkout << pipeline.parameters.cheerp-compiler-commit >>
+              git clone https://github.com/leaningtech/cheerp-compiler.git --branch << pipeline.parameters.cheerp-compiler-branch >> --depth 1
             fi
+            cd cheerp-compiler
       - run:
           name: Set up environment
           working_directory: ~/project/cheerp-compiler
@@ -89,17 +88,16 @@ jobs:
       - run:
           name: Get repos
           command: |
-            git clone https://github.com/leaningtech/cheerp-compiler.git
             git clone https://github.com/leaningtech/cheerp-utils.git
             git clone https://github.com/leaningtech/cheerp-libs.git
             git clone https://github.com/leaningtech/cheerp-musl.git
             if [ << pipeline.parameters.release-tag >> != master ]; then
-              cd cheerp-compiler && git checkout << pipeline.parameters.release-tag >> && cd ..
+              git clone https://github.com/leaningtech/cheerp-compiler.git --branch << pipeline.parameters.release-tag >> --depth 1
               cd cheerp-utils && git checkout << pipeline.parameters.release-tag >> && cd ..
               cd cheerp-libs && git checkout << pipeline.parameters.release-tag >> && cd ..
               cd cheerp-musl && git checkout << pipeline.parameters.release-tag >>
             else
-              cd cheerp-compiler && git checkout << pipeline.parameters.cheerp-compiler-commit >> && cd ..
+              git clone https://github.com/leaningtech/cheerp-compiler.git --branch << pipeline.parameters.cheerp-compiler-branch >> --depth 1
               cd cheerp-utils && git checkout << pipeline.parameters.cheerp-utils-commit >> && cd ..
               cd cheerp-libs && git checkout << pipeline.parameters.cheerp-libs-commit >> && cd ..
               cd cheerp-musl && git checkout << pipeline.parameters.cheerp-musl-commit >>
@@ -217,13 +215,12 @@ jobs:
           name: Get sources
           command: |
             git clone git@github.com:leaningtech/cheerp-internal.git
-            git clone https://github.com/leaningtech/cheerp-compiler.git cheerp-llvm-clang
-            cd cheerp-llvm-clang
-            if [ << pipeline.parameters.release-tag >> != master ]; then
-              git checkout << pipeline.parameters.release-tag >>
+            if [ << pipeline.parameters.release-tag >> != 'master' ]; then
+              git clone https://github.com/leaningtech/cheerp-compiler.git --branch << pipeline.parameters.release-tag >> --depth 1 cheerp-llvm-clang
             else
-              git checkout << pipeline.parameters.cheerp-compiler-commit >>
+              git clone https://github.com/leaningtech/cheerp-compiler.git --branch << pipeline.parameters.cheerp-compiler-branch >> --depth 1 cheerp-llvm-clang
             fi
+            cd cheerp-llvm-clang
       - set-up-rpm-workspace
       - add-rpm-sources:
           directory: cheerp-llvm-clang
@@ -256,17 +253,16 @@ jobs:
           name: Get repos
           command: |
             git clone git@github.com:leaningtech/cheerp-internal.git
-            git clone https://github.com/leaningtech/cheerp-compiler.git
             git clone https://github.com/leaningtech/cheerp-utils.git
             git clone https://github.com/leaningtech/cheerp-libs.git
             git clone https://github.com/leaningtech/cheerp-musl.git
             if [ << pipeline.parameters.release-tag >> != master ]; then
-              cd cheerp-compiler && git checkout << pipeline.parameters.release-tag >> && cd ..
+              git clone https://github.com/leaningtech/cheerp-compiler.git --branch << pipeline.parameters.release-tag >> --depth 1
               cd cheerp-utils && git checkout << pipeline.parameters.release-tag >> && cd ..
               cd cheerp-libs && git checkout << pipeline.parameters.release-tag >> && cd ..
               cd cheerp-musl && git checkout << pipeline.parameters.release-tag >>
             else
-              cd cheerp-compiler && git checkout << pipeline.parameters.cheerp-compiler-commit >> && cd ..
+              git clone https://github.com/leaningtech/cheerp-compiler.git --branch << pipeline.parameters.cheerp-compiler-branch >> --depth 1
               cd cheerp-utils && git checkout << pipeline.parameters.cheerp-utils-commit >> && cd ..
               cd cheerp-libs && git checkout << pipeline.parameters.cheerp-libs-commit >> && cd ..
               cd cheerp-musl && git checkout << pipeline.parameters.cheerp-musl-commit >>
@@ -1154,6 +1150,9 @@ parameters:
   release-tag:
     type: string
     default: "master"
+  cheerp-compiler-branch:
+    type: string
+    default: << pipeline.git.branch >>
   cheerp-compiler-commit:
     type: string
     default: << pipeline.git.revision >>
