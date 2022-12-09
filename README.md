@@ -31,7 +31,7 @@ This is only one of the components of Cheerp. Please see https://docs.leaningtec
 ### Build LLVM
 
 ```
-cmake -S llvm -B build -C llvm/CheerpCmakeConf.cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS=clang -DCLANG_ENABLE_OPAQUE_POINTERS=OFF -G Ninja
+cmake -S llvm -B build -C llvm/CheerpCmakeConf.cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS=clang -G Ninja
 ninja -C build
 ninja -C build install
 ```
@@ -46,9 +46,9 @@ For development, consider to add the following option:
 
 Go check the README.md of https://github.com/leaningtech/cheerp-utils
 
-### Build newlib
+### Build libc (musl)
 
-Go check the README.md of https://github.com/leaningtech/cheerp-newlib
+Go check the README.md of https://github.com/leaningtech/cheerp-musl
 
 ### Build libcxx and libcxxabi
 
@@ -62,6 +62,6 @@ ninja -C build_runtimes_wasm
 ninja -C build_runtimes_wasm install
 ```
 
-### Build libs
+### Build additional libs
 
 Go check the README.md of https://github.com/leaningtech/cheerp-libs
