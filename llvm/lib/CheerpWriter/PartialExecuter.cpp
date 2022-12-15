@@ -76,9 +76,9 @@ typedef std::vector<Value*> VectorOfArgs;
 template <class T>
 class WorkList
 {
-	std::unordered_set<T> visited;
+	std::set<T> visited;
 	std::vector<T> workList;
-	int next{0};
+	size_t next{0};
 
 public:
 	bool count(const T& val)
@@ -860,11 +860,11 @@ class ModuleData
 	llvm::Module& module;
 	PartialInterpreter* currentEE;
 	std::map<const llvm::Function*, FunctionData> functionData;
-	WorkList<const Function*> noInfoCallsites;
-	WorkList<std::pair<const Function*, VectorOfArgs>> someInfoCallsites;
 
 	void initFunctionData();
 public:
+	WorkList<const Function*> noInfoCallsites;
+	WorkList<std::pair<const Function*, const VectorOfArgs>> someInfoCallsites;
 	NewAlignmentData alignmentToBeBumped;
 	bool fail {false};
 	llvm::Module* getModulePtr()
