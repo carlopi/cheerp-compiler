@@ -1533,6 +1533,26 @@ void FunctionData::actualVisit()
 	groupData.recursiveVisit();
 }
 
+static bool hasIndirectOrExternalUse(const llvm::Function& F)
+{
+	if (F.getLinkage() != GlobalValue::InternalLinkage)
+		return true;
+
+	for (const Use &U : F.uses())
+	{
+		const User *FU = U.getUser();
+		if (!isa<CallInst>(FU))
+		{
+			return true;
+		}
+		//Normally this pattern should handle also InvokeInst, but here support is not yet present
+		const CallBase* CS = cast<CallBase>(FU);
+		if (!CS->isCallee(&U))
+			return true;
+	}
+	return false;
+}
+
 static void processFunction(const llvm::Function& F, ModuleData& moduleData)
 {
 	// For each SCC (process in order)
@@ -1547,36 +1567,23 @@ static void processFunction(const llvm::Function& F, ModuleData& moduleData)
 		return;
 
 	FunctionData& data = moduleData.getFunctionData(F);
-	bool hasIndirectUseOrExternal = false;
-
-	if (F.getLinkage() != GlobalValue::InternalLinkage)
-		hasIndirectUseOrExternal = true;
-
-	for (const Use &U : F.uses())
-	{
-		if (hasIndirectUseOrExternal)
-			break;
-		const User *FU = U.getUser();
-		if (!isa<CallInst>(FU))
-		{
-			hasIndirectUseOrExternal = true;
-			break;
-		}
-		//Normally this pattern should handle also InvokeInst, but here support is not yet present
-		const CallBase* CS = cast<CallBase>(FU);
-		if (CS->isCallee(&U))
-		{
-			data.visitCallBase(CS);	
-		}
-		else
-		{
-			hasIndirectUseOrExternal = true;
-		}
-	}
+	const bool hasIndirectUseOrExternal = hasIndirectOrExternalUse(F);
 
 	if (hasIndirectUseOrExternal)
 	{
 		data.enqueVisitNoInfo();
+	}
+	else
+	{
+		for (const Use &U : F.uses())
+		{
+			const User *FU = U.getUser();
+			assert(isa<CallInst>(FU) && cast<CallInst>(FU)->isCallee(&U));
+			//This could be expanded also to Invokes, but currently they are not supported
+
+			const CallInst* CI = cast<CallInst>(FU);
+			data.visitCallBase(CI);
+		}
 	}
 
 	data.visitAllCallSites();
