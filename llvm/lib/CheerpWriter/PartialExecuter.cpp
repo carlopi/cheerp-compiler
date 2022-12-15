@@ -1069,46 +1069,6 @@ public:
 		// Cleanup
 		doneVisitCallBase();
 	}
-	void visitAllCallSites()
-	{
-		bool needsNoInfoCallSite = false;
-
-		for (const VectorOfArgs& toBeVisited : callEquivalentQueue)
-			if (hasNoInfo(toBeVisited))
-				needsNoInfoCallSite = true;
-
-		if (callEquivalentQueue.size() >= MAX_NUMBER_OF_VISITS_PER_BB)
-			needsNoInfoCallSite = true;
-
-		if (needsNoInfoCallSite)
-		{
-			// Remove all call-sites and substitute them with one with no information at all
-			callEquivalentQueue.clear();
-			callEquivalentQueue.push_back(VectorOfArgs());
-		}
-
-		// Visit all collected callEquivalent
-		// Note that currently callEquivalentQueue is immutable during this loop (basically CallEquivalents are know beforehand)
-		for (const VectorOfArgs& toBeVisited : callEquivalentQueue)
-		{
-			visitCallEquivalent(toBeVisited);
-		}
-	}
-	void visitCallBase(const llvm::CallBase* callBase)
-	{
-		const auto& equivalentArgs = getArguments(callBase);
-
-		enqueCallEquivalent(equivalentArgs);
-	}
-	void enqueVisitNoInfo()
-	{
-		// Cleaun-up whatever is already in the queue, since this is guaranteed to dominate it
-		callEquivalentQueue.clear();
-
-		const auto& equivalentArgs = getArguments(nullptr);
-
-		enqueCallEquivalent(equivalentArgs);
-	}
 	void cleanupBB()
 	{
 		//Looping on existingEdges guarantee determinism
