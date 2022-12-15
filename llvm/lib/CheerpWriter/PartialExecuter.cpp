@@ -71,6 +71,7 @@ const uint32_t MAX_NUMBER_OF_VISITS_PER_BB = 100u;
 
 class FunctionData;
 class ModuleData;
+typedef std::vector<Value*> VectorOfArgs;
 
 class PartialInterpreter : public llvm::Interpreter {
 	friend FunctionData;
@@ -883,7 +884,6 @@ class FunctionData
 {
 	llvm::Function& F;
 	std::vector<std::pair<llvm::BasicBlock*, llvm::BasicBlock*>> existingEdges;
-	typedef std::vector<Value*> VectorOfArgs;
 
 	llvm::DenseMap<const llvm::BasicBlock*, int> visitCounter;
 	llvm::DenseSet<std::pair<const llvm::BasicBlock*, const llvm::BasicBlock*> > visitedEdges;
@@ -1042,7 +1042,7 @@ public:
 	{
 		bool needsNoInfoCallSite = false;
 
-		for (const FunctionData::VectorOfArgs& toBeVisited : callEquivalentQueue)
+		for (const VectorOfArgs& toBeVisited : callEquivalentQueue)
 			if (hasNoInfo(toBeVisited))
 				needsNoInfoCallSite = true;
 
@@ -1058,7 +1058,7 @@ public:
 
 		// Visit all collected callEquivalent
 		// Note that currently callEquivalentQueue is immutable during this loop (basically CallEquivalents are know beforehand)
-		for (const FunctionData::VectorOfArgs& toBeVisited : callEquivalentQueue)
+		for (const VectorOfArgs& toBeVisited : callEquivalentQueue)
 		{
 			visitCallEquivalent(toBeVisited);
 		}
