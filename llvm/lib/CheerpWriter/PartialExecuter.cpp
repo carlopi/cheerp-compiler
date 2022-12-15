@@ -923,8 +923,8 @@ class FunctionData
 
 	std::vector<VectorOfArgs> callEquivalentQueue;
 	PartialInterpreter* currentEE;
-
-	VectorOfArgs getArguments(const llvm::CallBase* callBase)
+public:
+	VectorOfArgs getArguments(const llvm::CallBase* callBase) const
 	{
 		VectorOfArgs args(F.getFunctionType()->getNumParams(), nullptr);
 
@@ -943,6 +943,7 @@ class FunctionData
 
 		return args;
 	}
+private:
 	// This function try to determine whether the set of arguments a is a subset of b
 	// VectorOfArgs holds for a given call site the args[0], args[1], ... args[N]
 	// with nullptr representing any possible argument (as in unknown).
@@ -1039,7 +1040,7 @@ public:
 		if (visitedEdges.insert({from, to}).second)
 			missingOutgoing[from]--;
 	}
-	bool hasNoInfo(const VectorOfArgs& arguments) const
+	static bool hasNoInfo(const VectorOfArgs& arguments)
 	{
 		for (const llvm::Value* arg : arguments)
 		{
@@ -1562,7 +1563,7 @@ static void processFunction(const llvm::Function& F, ModuleData& moduleData)
 
 	if (hasIndirectUseOrExternal)
 	{
-		data.noInfoCallsites.add(&F);
+		moduleData.noInfoCallsites.add(&F);
 	}
 	else
 	{
@@ -1573,39 +1574,39 @@ static void processFunction(const llvm::Function& F, ModuleData& moduleData)
 			//This could be expanded also to Invokes, but currently they are not supported
 
 			const CallInst* CI = cast<CallInst>(FU);
-			VectorOfArgs args = getArguments(CI);
-			if (hasNoInfo(args))
-				data.noInfoCallsites.add(&F);
+			VectorOfArgs args = data.getArguments(CI);
+			if (FunctionData::hasNoInfo(args))
+				moduleData.noInfoCallsites.add(&F);
 			else
-				data.someInfoCallsites.add({&F, args});;
+				moduleData.someInfoCallsites.add({&F, args});;
 		}
 	}
 }
 
-static void processModule(ModuleData& moduleData)
+static void processModule(ModuleData& moduleData, const llvm::Module& module)
 {
 	for (const Function& F : module)
 	{
-		processFunction(F, data);
+		processFunction(F, moduleData);
 	}
 
 	while (true)
 	{
 		const Function* F = nullptr;
 		VectorOfArgs args;
-		if (!noInfoCallsites.empty())
+		if (!moduleData.noInfoCallsites.empty())
 		{
-			F = noInfoCallsites.getSome();
+			F = moduleData.noInfoCallsites.getSome();
 		}
-		else if (!someInfoCallsites.empty())
+		else if (!moduleData.someInfoCallsites.empty())
 		{
-			auto pair = someInfoCallsites.getSome();
+			auto pair = moduleData.someInfoCallsites.getSome();
 			F = pair.first;
 			args = pair.second;
 
-			assert(hasNoInfo(args) == false);
+			assert(FunctionData::hasNoInfo(args) == false);
 
-			if (noInfoCallsites.count(F))
+			if (moduleData.noInfoCallsites.count(F))
 			{
 				// Function already processed
 				continue;
@@ -1615,7 +1616,7 @@ static void processModule(ModuleData& moduleData)
 		if (!F)
 			break;
 		FunctionData& data = moduleData.getFunctionData(*F);
-		data.visitCallEquivalent(args, *F);
+		data.visitCallEquivalent(args);
 	}
 }
 
@@ -1646,7 +1647,7 @@ bool PartialExecuter::runOnModule( llvm::Module & module )
 		return false;
 
 	// First part: analysis for determining which Edges are never taken
-	processModule(data);
+	processModule(data, module);
 
 	bool changed = false;
 
