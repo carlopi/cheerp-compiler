@@ -76,8 +76,8 @@ typedef std::vector<Value*> VectorOfArgs;
 template <class T>
 class WorkList
 {
-	std::unordered_set<const T> visited;
-	std::vector<const T> workList;
+	std::unordered_set<T> visited;
+	std::vector<T> workList;
 	int next{0};
 
 public:
