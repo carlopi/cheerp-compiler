@@ -73,6 +73,35 @@ class FunctionData;
 class ModuleData;
 typedef std::vector<Value*> VectorOfArgs;
 
+template <class T>
+class WorkList
+{
+	std::unordered_set<const T> visited;
+	std::vector<const T> workList;
+	int next{0};
+
+public:
+	bool count(const T& val)
+	{
+		return visited.count(val);
+	}
+	void add(const T& val)
+	{
+		if (visited.insert(val).second)
+			workList.push_back(val);
+	}
+	bool empty() const
+	{
+		return next < workList.size();
+	}
+	const T& getSome()
+	{
+		assert(!empty());
+		return workList[next++];
+	}
+};
+
+
 class PartialInterpreter : public llvm::Interpreter {
 	friend FunctionData;
 	friend ModuleData;
@@ -831,6 +860,8 @@ class ModuleData
 	llvm::Module& module;
 	PartialInterpreter* currentEE;
 	std::map<const llvm::Function*, FunctionData> functionData;
+	WorkList<const Function*> noInfoCallsites;
+	WorkList<std::pair<const Function*, VectorOfArgs>> someInfoCallsites;
 
 	void initFunctionData();
 public:
@@ -1571,7 +1602,7 @@ static void processFunction(const llvm::Function& F, ModuleData& moduleData)
 
 	if (hasIndirectUseOrExternal)
 	{
-		data.enqueVisitNoInfo();
+		data.noInfoCallsites.add(&F);
 	}
 	else
 	{
@@ -1582,11 +1613,13 @@ static void processFunction(const llvm::Function& F, ModuleData& moduleData)
 			//This could be expanded also to Invokes, but currently they are not supported
 
 			const CallInst* CI = cast<CallInst>(FU);
-			data.visitCallBase(CI);
+			VectorOfArgs args = getArguments(CI);
+			if (hasNoInfo(args))
+				data.noInfoCallsites.add(&F);
+			else
+				data.someInfoCallsites.add({&F, args});;
 		}
 	}
-
-	data.visitAllCallSites();
 }
 
 static void processModule(ModuleData& moduleData)
@@ -1594,6 +1627,35 @@ static void processModule(ModuleData& moduleData)
 	for (const Function& F : module)
 	{
 		processFunction(F, data);
+	}
+
+	while (true)
+	{
+		const Function* F = nullptr;
+		VectorOfArgs args;
+		if (!noInfoCallsites.empty())
+		{
+			F = noInfoCallsites.getSome();
+		}
+		else if (!someInfoCallsites.empty())
+		{
+			auto pair = someInfoCallsites.getSome();
+			F = pair.first;
+			args = pair.second;
+
+			assert(hasNoInfo(args) == false);
+
+			if (noInfoCallsites.count(F))
+			{
+				// Function already processed
+				continue;
+			}
+		}
+
+		if (!F)
+			break;
+		FunctionData& data = moduleData.getFunctionData(*F);
+		data.visitCallEquivalent(args, *F);
 	}
 }
 
