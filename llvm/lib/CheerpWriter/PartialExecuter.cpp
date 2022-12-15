@@ -1589,6 +1589,14 @@ static void processFunction(const llvm::Function& F, ModuleData& moduleData)
 	data.visitAllCallSites();
 }
 
+static void processModule(ModuleData& moduleData)
+{
+	for (const Function& F : module)
+	{
+		processFunction(F, data);
+	}
+}
+
 static bool modifyFunction(llvm::Function& F, ModuleData& moduleData)
 {
 	if (F.isDeclaration())
@@ -1616,10 +1624,7 @@ bool PartialExecuter::runOnModule( llvm::Module & module )
 		return false;
 
 	// First part: analysis for determining which Edges are never taken
-	for (const Function& F : module)
-	{
-		processFunction(F, data);
-	}
+	processModule(data);
 
 	bool changed = false;
 
