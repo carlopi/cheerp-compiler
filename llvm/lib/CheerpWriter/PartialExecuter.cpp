@@ -1529,6 +1529,14 @@ void BasicBlockGroupNode::splitIntoSCCs(std::list<BasicBlockGroupNode>& queueToB
 
 void FunctionData::actualVisit()
 {
+	// For each SCC (process in order)
+	//	if single point of entry: start from there, otherwise (no point of entry -> all unreachable / multiple ones -> all reachable)
+	//	execute from single point of entry (+ state that's intersection of possible path to it)
+	//	if (unconditional or decidable) -> follow path, otherwise
+	//		if immediate dominator is in the SCC, jump there(a refinement would be immediate dominator in SCC while invalidating all otherwise reachable SCC) or bail out
+	//	bail out:
+	//		sign as reachable all out-going edges from the SCC (keeping only the state pre-SCC) + all BB in the SCC
+
 	BasicBlockGroupNode groupData(*this);
 	groupData.recursiveVisit();
 }
@@ -1555,14 +1563,6 @@ static bool hasIndirectOrExternalUse(const llvm::Function& F)
 
 static void processFunction(const llvm::Function& F, ModuleData& moduleData)
 {
-	// For each SCC (process in order)
-	//	if single point of entry: start from there, otherwise (no point of entry -> all unreachable / multiple ones -> all reachable)
-	//	execute from single point of entry (+ state that's intersection of possible path to it)
-	//	if (unconditional or decidable) -> follow path, otherwise
-	//		if immediate dominator is in the SCC, jump there(a refinement would be immediate dominator in SCC while invalidating all otherwise reachable SCC) or bail out
-	//	bail out:
-	//		sign as reachable all out-going edges from the SCC (keeping only the state pre-SCC) + all BB in the SCC
-
 	if (F.isDeclaration())
 		return;
 
