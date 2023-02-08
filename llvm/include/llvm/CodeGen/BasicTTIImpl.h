@@ -1187,7 +1187,8 @@ public:
 
   InstructionCost getVectorInstrCost(unsigned Opcode, Type *Val,
                                      unsigned Index) {
-    return getRegUsageForType(Val->getScalarType());
+    std::pair<InstructionCost, MVT> LT = getTypeLegalizationCost(Val->getScalarType());
+    return LT.first;
   }
 
   InstructionCost getVectorInstrCost(const Instruction &I, Type *Val,
